@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Stage 2 file mock gate probe</title>
+</head>
+<body>
+  <div id="result">FILE MOCK GATE: RUNNING</div>
+  <script src="../SqueezeRushIOS/Web/native-bridge.js"></script>
+  <script>
+    document.getElementById("result").textContent = window.__SQUEEZE_RUSH_NATIVE_BRIDGE_MOCK__
+      ? "FILE MOCK GATE: FAIL"
+      : "FILE MOCK GATE: PASS";
+  </script>
+</body>
+</html>

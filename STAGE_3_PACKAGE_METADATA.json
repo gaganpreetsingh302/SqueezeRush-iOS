@@ -1,0 +1,32 @@
+{
+  "retrievedDate": "2026-08-04",
+  "mobileAds": {
+    "repository": "https://github.com/googleads/swift-package-manager-google-mobile-ads.git",
+    "version": "13.7.0",
+    "tagCommit": "868149fc50d1452078e83540e636cf519bac3e6a",
+    "artifactURL": "https://dl.google.com/googleadmobadssdk/e89ba382a6244f5c/googlemobileadsios-spm-13.7.0.zip",
+    "artifactSHA256": "e89ba382a6244f5c8d92941015b12d98678689ebe14960eaa4c1d5951784a9c2"
+  },
+  "ump": {
+    "repository": "https://github.com/googleads/swift-package-manager-google-user-messaging-platform.git",
+    "declaredRequirement": "1.1.0..<4.0.0",
+    "selectedHighestCompatibleVersion": "3.1.0",
+    "directProjectDependency": true,
+    "directExactVersion": "3.1.0",
+    "productName": "GoogleUserMessagingPlatform",
+    "importModule": "UserMessagingPlatform",
+    "tagCommit": "13b248eaa73b7826f0efb1bcf455e251d65ecb1b",
+    "artifactURL": "https://dl.google.com/googleadmobadssdk/90fe6bf3b0f4ce0d/googleusermessagingplatformios-spm-3.1.0.zip",
+    "artifactSHA256": "90fe6bf3b0f4ce0d0199628c0871de58b6f673375148b98d52348aecc86db231"
+  },
+  "verification": {
+    "officialTagsAndManifestsVerified": true,
+    "artifactChecksumsVerified": true,
+    "swiftPMResolutionAttempted": true,
+    "swiftPMResolutionSucceededOnWindows": false,
+    "packageResolvedGenerated": false,
+    "directAndTransitiveUMPUnificationPendingXcode": true,
+    "xcodeResolutionRequired": true,
+    "note": "Stage 3A directly constrains the same UMP package identity to exact 3.1.0 while Google Mobile Ads 13.7.0 declares 1.1.0..<4.0.0. Windows Swift 6.0.1 failed while compiling the package manifest because its Windows SDK module graph could not build; no dependency result was fabricated. Xcode must unify the direct and transitive requirements and generate the authoritative Package.resolved file."
+  }
+}

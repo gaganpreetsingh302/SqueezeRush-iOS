@@ -1,0 +1,431 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 56;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		A1B2C3D4E5F6071829300016 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300010 /* AppDelegate.swift */; };
+		A1B2C3D4E5F6071829300017 /* GameViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300011 /* GameViewController.swift */; };
+		A1B2C3D4E5F6071829300041 /* SqueezeRushNativeBridge.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300042 /* SqueezeRushNativeBridge.swift */; };
+		A1B2C3D4E5F6071829300050 /* SqueezeRushAdFlowState.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300055 /* SqueezeRushAdFlowState.swift */; };
+		A1B2C3D4E5F6071829300051 /* SqueezeRushConsentManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300056 /* SqueezeRushConsentManager.swift */; };
+		A1B2C3D4E5F6071829300052 /* SqueezeRushAdManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300057 /* SqueezeRushAdManager.swift */; };
+		A1B2C3D4E5F6071829300018 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300013 /* Assets.xcassets */; };
+		A1B2C3D4E5F6071829300020 /* Web in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300015 /* Web */; };
+		A1B2C3D4E5F6071829300053 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300058 /* PrivacyInfo.xcprivacy */; };
+		A1B2C3D4E5F6071829300054 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F607182930005D /* GoogleMobileAds */; };
+		A1B2C3D4E5F6071829300060 /* GoogleUserMessagingPlatform in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F6071829300062 /* GoogleUserMessagingPlatform */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		A1B2C3D4E5F6071829300003 /* Squeeze Rush.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Squeeze Rush.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		A1B2C3D4E5F6071829300010 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300011 /* GameViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameViewController.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300042 /* SqueezeRushNativeBridge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SqueezeRushNativeBridge.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300055 /* SqueezeRushAdFlowState.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SqueezeRushAdFlowState.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300056 /* SqueezeRushConsentManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SqueezeRushConsentManager.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300057 /* SqueezeRushAdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SqueezeRushAdManager.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300058 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300059 /* ValidateAdMobReleaseConfiguration.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = ValidateAdMobReleaseConfiguration.sh; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300012 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300015 /* Web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Web; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A1B2C3D4E5F6071829300009 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1B2C3D4E5F6071829300054 /* GoogleMobileAds in Frameworks */,
+				A1B2C3D4E5F6071829300060 /* GoogleUserMessagingPlatform in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		A1B2C3D4E5F6071829300004 = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6071829300005 /* SqueezeRushIOS */,
+				A1B2C3D4E5F6071829300006 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F6071829300005 /* SqueezeRushIOS */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6071829300010 /* AppDelegate.swift */,
+				A1B2C3D4E5F6071829300011 /* GameViewController.swift */,
+				A1B2C3D4E5F6071829300042 /* SqueezeRushNativeBridge.swift */,
+				A1B2C3D4E5F6071829300055 /* SqueezeRushAdFlowState.swift */,
+				A1B2C3D4E5F6071829300056 /* SqueezeRushConsentManager.swift */,
+				A1B2C3D4E5F6071829300057 /* SqueezeRushAdManager.swift */,
+				A1B2C3D4E5F6071829300012 /* Info.plist */,
+				A1B2C3D4E5F6071829300058 /* PrivacyInfo.xcprivacy */,
+				A1B2C3D4E5F6071829300013 /* Assets.xcassets */,
+				A1B2C3D4E5F6071829300015 /* Web */,
+				A1B2C3D4E5F607182930005A /* BuildScripts */,
+			);
+			path = SqueezeRushIOS;
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F607182930005A /* BuildScripts */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6071829300059 /* ValidateAdMobReleaseConfiguration.sh */,
+			);
+			path = BuildScripts;
+			sourceTree = "<group>";
+		};
+		A1B2C3D4E5F6071829300006 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A1B2C3D4E5F6071829300003 /* Squeeze Rush.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A1B2C3D4E5F6071829300002 /* SqueezeRushIOS */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A1B2C3D4E5F6071829300026 /* Build configuration list for PBXNativeTarget "SqueezeRushIOS" */;
+			buildPhases = (
+				A1B2C3D4E5F607182930005B /* Validate Release Ad Configuration */,
+				A1B2C3D4E5F6071829300007 /* Sources */,
+				A1B2C3D4E5F6071829300009 /* Frameworks */,
+				A1B2C3D4E5F6071829300008 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = SqueezeRushIOS;
+			packageProductDependencies = (
+				A1B2C3D4E5F607182930005D /* GoogleMobileAds */,
+				A1B2C3D4E5F6071829300062 /* GoogleUserMessagingPlatform */,
+			);
+			productName = "Squeeze Rush";
+			productReference = A1B2C3D4E5F6071829300003 /* Squeeze Rush.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A1B2C3D4E5F6071829300001 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1600;
+				LastUpgradeCheck = 1600;
+				TargetAttributes = {
+					A1B2C3D4E5F6071829300002 = {
+						CreatedOnToolsVersion = 16.0;
+					};
+				};
+			};
+			buildConfigurationList = A1B2C3D4E5F6071829300025 /* Build configuration list for PBXProject "SqueezeRushIOS" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A1B2C3D4E5F6071829300004;
+			packageReferences = (
+				A1B2C3D4E5F607182930005C /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */,
+				A1B2C3D4E5F6071829300061 /* XCRemoteSwiftPackageReference "swift-package-manager-google-user-messaging-platform" */,
+			);
+			productRefGroup = A1B2C3D4E5F6071829300006 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A1B2C3D4E5F6071829300002 /* SqueezeRushIOS */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A1B2C3D4E5F6071829300008 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1B2C3D4E5F6071829300018 /* Assets.xcassets in Resources */,
+				A1B2C3D4E5F6071829300020 /* Web in Resources */,
+				A1B2C3D4E5F6071829300053 /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		A1B2C3D4E5F607182930005B /* Validate Release Ad Configuration */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "Validate Release Ad Configuration";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "/bin/sh \"${SRCROOT}/SqueezeRushIOS/BuildScripts/ValidateAdMobReleaseConfiguration.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A1B2C3D4E5F6071829300007 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A1B2C3D4E5F6071829300016 /* AppDelegate.swift in Sources */,
+				A1B2C3D4E5F6071829300017 /* GameViewController.swift in Sources */,
+				A1B2C3D4E5F6071829300041 /* SqueezeRushNativeBridge.swift in Sources */,
+				A1B2C3D4E5F6071829300050 /* SqueezeRushAdFlowState.swift in Sources */,
+				A1B2C3D4E5F6071829300051 /* SqueezeRushConsentManager.swift in Sources */,
+				A1B2C3D4E5F6071829300052 /* SqueezeRushAdManager.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		A1B2C3D4E5F6071829300021 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A1B2C3D4E5F6071829300022 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		A1B2C3D4E5F6071829300023 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ADMOB_APP_ID = "ca-app-pub-3940256099942544~1458002511";
+				ADMOB_INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/4411468910";
+				ADMOB_REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/1712485313";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SqueezeRushIOS/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kasiga.squeezerush;
+				PRODUCT_NAME = "Squeeze Rush";
+				SQUEEZE_RUSH_ADS_RELEASE_APPROVED = NO;
+				SQUEEZE_RUSH_UMP_DEBUG_GEOGRAPHY = "";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		A1B2C3D4E5F6071829300024 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ADMOB_APP_ID = "";
+				ADMOB_INTERSTITIAL_AD_UNIT_ID = "";
+				ADMOB_REWARDED_AD_UNIT_ID = "";
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 3;
+				DEVELOPMENT_TEAM = "";
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = SqueezeRushIOS/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 15.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 2.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.kasiga.squeezerush;
+				PRODUCT_NAME = "Squeeze Rush";
+				SQUEEZE_RUSH_ADS_RELEASE_APPROVED = NO;
+				SQUEEZE_RUSH_UMP_DEBUG_GEOGRAPHY = "";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A1B2C3D4E5F6071829300025 /* Build configuration list for PBXProject "SqueezeRushIOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1B2C3D4E5F6071829300021 /* Debug */,
+				A1B2C3D4E5F6071829300022 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A1B2C3D4E5F6071829300026 /* Build configuration list for PBXNativeTarget "SqueezeRushIOS" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A1B2C3D4E5F6071829300023 /* Debug */,
+				A1B2C3D4E5F6071829300024 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		A1B2C3D4E5F607182930005C /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-mobile-ads.git";
+			requirement = {
+				kind = exactVersion;
+				version = 13.7.0;
+			};
+		};
+		A1B2C3D4E5F6071829300061 /* XCRemoteSwiftPackageReference "swift-package-manager-google-user-messaging-platform" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/googleads/swift-package-manager-google-user-messaging-platform.git";
+			requirement = {
+				kind = exactVersion;
+				version = 3.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A1B2C3D4E5F607182930005D /* GoogleMobileAds */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F607182930005C /* XCRemoteSwiftPackageReference "swift-package-manager-google-mobile-ads" */;
+			productName = GoogleMobileAds;
+		};
+		A1B2C3D4E5F6071829300062 /* GoogleUserMessagingPlatform */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = A1B2C3D4E5F6071829300061 /* XCRemoteSwiftPackageReference "swift-package-manager-google-user-messaging-platform" */;
+			productName = GoogleUserMessagingPlatform;
+		};
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = A1B2C3D4E5F6071829300001 /* Project object */;
+}

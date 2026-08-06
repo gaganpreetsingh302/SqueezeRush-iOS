@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="Squeeze Rush icon">
+  <rect width="512" height="512" rx="64" fill="#101114"/>
+  <path d="M0 118h512v30H0zM0 364h512v30H0z" fill="#4cc9f0" opacity=".92"/>
+  <path d="M0 158h178v196H0zM334 158h178v196H334z" fill="#2ee6a6"/>
+  <rect x="213" y="111" width="86" height="290" rx="43" fill="#ff5a5f"/>
+  <path d="M229 150c19-19 55-18 71 2" fill="none" stroke="#ffd166" stroke-width="20" stroke-linecap="round"/>
+  <circle cx="242" cy="246" r="14" fill="#101114"/>
+  <circle cx="270" cy="246" r="14" fill="#101114"/>
+  <path d="M229 298c18 24 55 24 73 0" fill="none" stroke="#101114" stroke-width="16" stroke-linecap="round"/>
+</svg>

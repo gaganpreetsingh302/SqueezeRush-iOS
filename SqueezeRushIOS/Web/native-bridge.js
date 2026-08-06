@@ -119,6 +119,13 @@
       return { text };
     }
 
+    if (action === ACTIONS.REWARDED_SHOW) {
+      if (!hasOnlyKeys(payload, ["placement"]) || payload.placement !== "revive") {
+        throw new TypeError("rewarded.show requires placement revive during Stage 4.");
+      }
+      return { placement: "revive" };
+    }
+
     if (Object.keys(payload).length !== 0) {
       throw new TypeError(`${action} does not accept payload fields in protocol version 1 Stage 2.`);
     }
@@ -233,11 +240,14 @@
     const requestContext = entry.context;
     const currentContext = captureLifecycleContext();
 
-    if (requestContext.runId !== responseContext.runId || requestContext.resultSequence !== responseContext.resultSequence) {
+    if (requestContext.runId !== responseContext.runId
+      || requestContext.resultSequence !== responseContext.resultSequence
+      || requestContext.lifecyclePhase !== responseContext.lifecyclePhase) {
       return true;
     }
     if (requestContext.runId !== null && currentContext.runId !== requestContext.runId) return true;
     if (requestContext.resultSequence !== null && currentContext.resultSequence !== requestContext.resultSequence) return true;
+    if (requestContext.lifecyclePhase !== null && currentContext.lifecyclePhase !== requestContext.lifecyclePhase) return true;
     return false;
   }
 
@@ -300,6 +310,10 @@
       const cleanPayload = validateActionPayload(action, payload === undefined ? {} : payload);
       const cleanOptions = validateOptions(options);
       const context = captureLifecycleContext();
+      if (action === ACTIONS.REWARDED_SHOW
+        && (!context.runId || context.resultSequence === null || context.lifecyclePhase !== "result_pending")) {
+        throw new TypeError("rewarded.show requires a current result_pending run and result sequence.");
+      }
       const requestId = nextRequestId();
       const lifecycleScoped = cleanOptions.lifecycleScoped || LIFECYCLE_SCOPED_ACTIONS.has(action);
       prepared = {

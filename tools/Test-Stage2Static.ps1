@@ -33,8 +33,8 @@ function Get-RelativeProjectPath {
 }
 
 $unchangedHashes = [ordered]@{
-    'SqueezeRushIOS\Web\run-lifecycle.js' = 'F0EED9B5257260C09A81E54626E146950C202359405AE367FE6E1D3EB680910F'
-    'SqueezeRushIOS\Web\styles.css' = 'AF2C5C55B050A7BA77139712F0D081A5967AD5E2DFBB97F6F5F8C3BFB635FB53'
+    'SqueezeRushIOS\Web\run-lifecycle.js' = '6D0AF635A9C638183035E312BAE26E7076B1561635C649EB7F3266BE124C6397'
+    'SqueezeRushIOS\Web\styles.css' = '7C3B6BAFF43C1ED04F631BA302A6F2902AF29FD715ABF1FAE9979E07BAD5D6CB'
     'SqueezeRushIOS\AppDelegate.swift' = '889597E22D37BC66E53B6B9FE9C061762E0DBDB0497D3128183FED1ACA926C88'
 }
 foreach ($entry in $unchangedHashes.GetEnumerator()) {
@@ -42,7 +42,7 @@ foreach ($entry in $unchangedHashes.GetEnumerator()) {
     $actual = if (Test-Path -LiteralPath $path -PathType Leaf) {
         (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash
     } else { '' }
-    Test-Stage2Condition ($actual -eq $entry.Value) "$($entry.Key) remains byte-for-byte at the Stage 1 baseline"
+    Test-Stage2Condition ($actual -eq $entry.Value) "$($entry.Key) matches the audited Stage 4 controlled baseline"
 }
 $stage3Info = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'SqueezeRushIOS\Info.plist')
 Test-Stage2Condition (

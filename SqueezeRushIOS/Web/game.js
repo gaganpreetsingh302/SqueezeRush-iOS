@@ -48,6 +48,7 @@
   const instructionOkBtn = document.getElementById("instructionOkBtn");
   const instructionBackBtn = document.getElementById("instructionBackBtn");
   const reviveBtn = document.getElementById("reviveBtn");
+  const rewardedReviveBtn = document.getElementById("rewardedReviveBtn");
   const retryBtn = document.getElementById("retryBtn");
   const shareBtn = document.getElementById("shareBtn");
   const menuBtn = document.getElementById("menuBtn");
@@ -239,6 +240,11 @@
   let toastTimer = 0;
   let splashTimers = [];
   let countdownTimers = [];
+  let rewardedReviveOfferSerial = 0;
+  let rewardedReviveOfferContext = null;
+  let activeRewardedReviveRequest = null;
+  let rewardedReviveRequestSerial = 0;
+  let rewardedReviveTimeoutMs = 120000;
   const modeBests = readModeBests();
   const career = readCareer();
   const settings = readSettings();
@@ -375,6 +381,7 @@
       button.addEventListener("click", () => showInstructions(button.dataset.mode || "daily"));
     }
     reviveBtn.addEventListener("click", reviveRun);
+    rewardedReviveBtn.addEventListener("click", requestRewardedRevive);
     retryBtn.addEventListener("click", retryRun);
     menuBtn.addEventListener("click", leaveResultForMenu);
     shareBtn.addEventListener("click", shareScore);
@@ -527,6 +534,7 @@
     brandSplash.setAttribute("aria-hidden", "true");
     instructions.classList.add("visible");
     reviveBtn.classList.add("hidden");
+    invalidateRewardedReviveFlow();
     retryBtn.classList.add("primary");
     updateHud();
   }
@@ -598,6 +606,8 @@
       return;
     }
 
+    invalidateRewardedReviveFlow();
+
     state.mode = modeConfigs[mode] ? mode : "daily";
     const config = currentMode();
     state.seed = config.seed();
@@ -658,6 +668,7 @@
     brandSplash.classList.remove("is-visible");
     brandSplash.setAttribute("aria-hidden", "true");
     reviveBtn.classList.add("hidden");
+    rewardedReviveBtn.classList.add("hidden");
     retryBtn.classList.add("primary");
     showToast(config.label);
     playSound("start");
@@ -670,11 +681,13 @@
       return;
     }
 
-    const canRevive = state.revives > 0 && reason !== "timeup";
-    const resultSequence = runLifecycle.beginResult(reason, canRevive);
+    const canTokenRevive = state.revives > 0 && reason !== "timeup";
+    const resultSequence = runLifecycle.beginResult(reason, canTokenRevive);
     if (resultSequence === null) {
       return;
     }
+
+    invalidateRewardedReviveFlow();
 
     state.running = false;
     state.over = true;
@@ -696,32 +709,46 @@
     resultPerfect.textContent = String(state.perfects);
     resultCombo.textContent = `x${state.bestCombo}`;
     rewardLine.textContent = `+${state.runRewardXp} XP  +${state.runRewardCores} Cores`;
-    reviveBtn.classList.toggle("hidden", !canRevive);
+    reviveBtn.classList.toggle("hidden", !canTokenRevive);
     reviveBtn.textContent = `Revive x${state.revives}`;
-    retryBtn.classList.toggle("primary", !canRevive);
+    rewardedReviveBtn.classList.add("hidden");
+    retryBtn.classList.toggle("primary", !canTokenRevive);
     gameOver.classList.add("visible");
     renderCareer();
     renderContracts();
     updateHud();
     runLifecycle.resultShown(resultSequence, {
       reason,
-      canTokenRevive: canRevive,
+      canTokenRevive,
       score: state.score,
       xpReward: state.accumulatedXpReward,
       coreReward: state.accumulatedCoreReward
     });
 
-    if (!canRevive) {
-      const finalReason = reason === "timeup" ? "timeup" : `no_revive:${reason}`;
-      finalizeCurrentRun(finalReason, resultSequence);
+    if (canTokenRevive) {
+      return;
     }
+
+    if (isRewardedReviveProductEligible(resultSequence) && nativeBridgeAvailable()) {
+      refreshRewardedReviveOffer(resultSequence);
+      return;
+    }
+
+    const finalReason = reason === "timeup" ? "timeup" : `no_revive:${reason}`;
+    finalizeCurrentRun(finalReason, resultSequence);
   }
 
   function reviveRun() {
     const resultSequence = state.resultSequence;
-    if (state.running || !runLifecycle.reviveWithToken(resultSequence)) {
+    if (activeRewardedReviveRequest || state.running || !runLifecycle.reviveWithToken(resultSequence)) {
       return;
     }
+
+    continueRunAfterRevive();
+  }
+
+  function continueRunAfterRevive() {
+    invalidateRewardedReviveFlow();
 
     state.running = true;
     state.over = false;
@@ -737,6 +764,7 @@
     input.keyboard = false;
     gameOver.classList.remove("visible");
     reviveBtn.classList.add("hidden");
+    rewardedReviveBtn.classList.add("hidden");
     retryBtn.classList.add("primary");
     burst(player.x, player.y, "#ff5a5f", 42, 0.9);
     showToast("Revived");
@@ -745,11 +773,200 @@
     updateHud();
   }
 
+  function nativeBridgeAvailable() {
+    try {
+      return Boolean(window.SqueezeRushNative
+        && typeof window.SqueezeRushNative.isNativeAvailable === "function"
+        && window.SqueezeRushNative.isNativeAvailable());
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function modeAllowsRevive() {
+    const config = currentMode();
+    return config.revives > 0 || config.allowRevivePickups === true;
+  }
+
+  function isDeathResult(reason) {
+    return reason === "popped" || reason === "smashed";
+  }
+
+  function isSamePendingResult(context) {
+    const snapshot = runLifecycle.snapshot();
+    return Boolean(context
+      && snapshot.lifecyclePhase === runLifecycle.phases.RESULT_PENDING
+      && !snapshot.runFinalized
+      && snapshot.runId === context.runId
+      && snapshot.resultSequence === context.resultSequence);
+  }
+
+  function isRewardedReviveProductEligible(expectedResultSequence) {
+    const snapshot = runLifecycle.snapshot();
+    return snapshot.lifecyclePhase === runLifecycle.phases.RESULT_PENDING
+      && !snapshot.runFinalized
+      && snapshot.resultSequence === Number(expectedResultSequence)
+      && isDeathResult(state.pendingReason)
+      && modeAllowsRevive()
+      && state.revives <= 0
+      && !snapshot.rewardedReviveUsed
+      && !activeRewardedReviveRequest;
+  }
+
+  function setResultControlsDisabled(disabled) {
+    const value = Boolean(disabled);
+    reviveBtn.disabled = value;
+    rewardedReviveBtn.disabled = value;
+    retryBtn.disabled = value;
+    shareBtn.disabled = value;
+    menuBtn.disabled = value;
+  }
+
+  function resetRewardedReviveButton() {
+    rewardedReviveBtn.classList.add("hidden");
+    rewardedReviveBtn.disabled = false;
+    rewardedReviveBtn.textContent = "Watch Ad to Revive";
+  }
+
+  function invalidateRewardedReviveFlow() {
+    rewardedReviveOfferSerial += 1;
+    rewardedReviveOfferContext = null;
+    activeRewardedReviveRequest = null;
+    resetRewardedReviveButton();
+    setResultControlsDisabled(false);
+  }
+
+  async function refreshRewardedReviveOffer(expectedResultSequence) {
+    const context = Object.freeze({
+      runId: state.runId,
+      resultSequence: Number(expectedResultSequence)
+    });
+    const offerSerial = ++rewardedReviveOfferSerial;
+    rewardedReviveOfferContext = null;
+    resetRewardedReviveButton();
+
+    let response = null;
+    try {
+      response = await window.SqueezeRushNative.getCapabilities({ refresh: true, timeoutMs: 5000 });
+    } catch (error) {
+      response = null;
+    }
+
+    if (offerSerial !== rewardedReviveOfferSerial
+      || !isSamePendingResult(context)
+      || !isRewardedReviveProductEligible(context.resultSequence)) {
+      return;
+    }
+
+    const capabilities = response && response.status === "success" ? response.data : null;
+    const available = Boolean(capabilities
+      && capabilities.nativeBridge === true
+      && capabilities.rewardedAds === true
+      && capabilities.canRequestAds === true
+      && capabilities.rewardedAdReady === true);
+    if (!available) {
+      finalizeCurrentRun(`no_rewarded_revive:${state.pendingReason || "result"}`, context.resultSequence);
+      return;
+    }
+
+    rewardedReviveOfferContext = context;
+    rewardedReviveBtn.textContent = "Watch Ad to Revive";
+    rewardedReviveBtn.disabled = false;
+    rewardedReviveBtn.classList.remove("hidden");
+    retryBtn.classList.remove("primary");
+  }
+
+  async function requestRewardedRevive() {
+    const offerContext = rewardedReviveOfferContext;
+    if (!offerContext
+      || activeRewardedReviveRequest
+      || !isSamePendingResult(offerContext)
+      || !isRewardedReviveProductEligible(offerContext.resultSequence)) {
+      return;
+    }
+
+    rewardedReviveRequestSerial += 1;
+    const request = Object.freeze({
+      serial: rewardedReviveRequestSerial,
+      runId: offerContext.runId,
+      resultSequence: offerContext.resultSequence
+    });
+    activeRewardedReviveRequest = request;
+    rewardedReviveOfferContext = null;
+    setResultControlsDisabled(true);
+    rewardedReviveBtn.textContent = "Loading Ad...";
+
+    let response = null;
+    try {
+      response = await window.SqueezeRushNative.request(
+        window.SqueezeRushNative.actions.REWARDED_SHOW,
+        { placement: "revive" },
+        { timeoutMs: rewardedReviveTimeoutMs }
+      );
+    } catch (error) {
+      response = null;
+    }
+
+    settleRewardedReviveRequest(request, response);
+  }
+
+  function settleRewardedReviveRequest(request, response) {
+    if (activeRewardedReviveRequest !== request) {
+      return;
+    }
+    activeRewardedReviveRequest = null;
+
+    if (!isSamePendingResult(request)) {
+      resetRewardedReviveButton();
+      return;
+    }
+
+    const contextMatches = Boolean(response && response.context
+      && response.context.runId === request.runId
+      && response.context.resultSequence === request.resultSequence
+      && response.context.lifecyclePhase === runLifecycle.phases.RESULT_PENDING);
+    const verifiedEarnedRevive = Boolean(response
+      && response.status === "success"
+      && response.data
+      && response.data.earned === true
+      && response.data.placement === "revive"
+      && contextMatches);
+
+    if (verifiedEarnedRevive && runLifecycle.reviveWithRewarded(request.resultSequence)) {
+      continueRunAfterRevive();
+      return;
+    }
+
+    restoreResultControlsAfterRewardedFailure();
+    showToast(rewardedReviveFailureMessage(response));
+  }
+
+  function restoreResultControlsAfterRewardedFailure() {
+    rewardedReviveOfferContext = null;
+    resetRewardedReviveButton();
+    setResultControlsDisabled(false);
+    retryBtn.classList.add("primary");
+  }
+
+  function rewardedReviveFailureMessage(response) {
+    if (!response) return "Ad unavailable";
+    if (response.status === "cancelled") return "Ad closed";
+    if (response.status === "timeout") return "Ad timed out";
+    if (response.status === "stale") return "Result changed";
+    if (response.status === "failed") return "Ad failed";
+    if (response.status === "unavailable") return "Ad unavailable";
+    if (response.status === "success") return "Reward not earned";
+    return "Ad unavailable";
+  }
+
   function finalizeCurrentRun(reason, resultSequence) {
     return runLifecycle.finalize(reason, resultSequence);
   }
 
   function completeResultAction(action) {
+    if (activeRewardedReviveRequest) {
+      return false;
+    }
     const resultSequence = state.resultSequence;
     const resultReason = state.pendingReason || "result";
     if (!runLifecycle.claimResultAction(resultSequence, action)) {
@@ -789,6 +1006,7 @@
     countdownOverlay.setAttribute("aria-hidden", "true");
     gameOver.classList.remove("visible");
     reviveBtn.classList.add("hidden");
+    invalidateRewardedReviveFlow();
     menu.classList.add("visible");
     state.running = false;
     state.splashing = false;
@@ -1966,6 +2184,11 @@
       revives: state.revives,
       runRewardXp: state.runRewardXp,
       runRewardCores: state.runRewardCores,
+      player: {
+        pressure: player.pressure,
+        squeeze: player.squeeze,
+        invulnerable: player.invulnerable
+      },
       awardSnapshot: Object.assign({}, state.awardSnapshot),
       career: JSON.parse(JSON.stringify(career)),
       modeBests: Object.assign({}, modeBests),
@@ -1974,6 +2197,16 @@
         menu: menu.classList.contains("visible"),
         instructions: instructions.classList.contains("visible"),
         gameOver: gameOver.classList.contains("visible")
+      },
+      rewardedRevive: {
+        offerAvailable: Boolean(rewardedReviveOfferContext),
+        requestPending: Boolean(activeRewardedReviveRequest),
+        hidden: rewardedReviveBtn.classList.contains("hidden"),
+        disabled: rewardedReviveBtn.disabled,
+        label: rewardedReviveBtn.textContent,
+        retryDisabled: retryBtn.disabled,
+        menuDisabled: menuBtn.disabled,
+        tokenReviveDisabled: reviveBtn.disabled
       },
       storage: {
         best: localStorage.getItem(storageKey),
@@ -2004,6 +2237,25 @@
         }
       }
     }
+    if (typeof values.rewardedReviveUsed === "boolean") {
+      state.rewardedReviveUsed = values.rewardedReviveUsed;
+    }
+  }
+
+  function setRewardedReviveTimeoutForTest(value) {
+    const timeout = Number(value);
+    if (Number.isFinite(timeout) && timeout >= 10 && timeout <= 120000) {
+      rewardedReviveTimeoutMs = Math.floor(timeout);
+    }
+  }
+
+  function changeLifecycleForRewardedReviveTest() {
+    const resultSequence = state.resultSequence;
+    if (state.lifecyclePhase !== runLifecycle.phases.RESULT_PENDING) return false;
+    runLifecycle.claimResultAction(resultSequence, "test_lifecycle_change");
+    const finalized = finalizeCurrentRun("test_lifecycle_change", resultSequence);
+    if (finalized) showMenu();
+    return finalized;
   }
 
   const stage1TestEnabled = window.__SQUEEZE_RUSH_STAGE1_TEST__ === true
@@ -2026,6 +2278,9 @@
       retryRun,
       leaveResultForMenu,
       shareScore,
+      requestRewardedRevive,
+      setRewardedReviveTimeout: setRewardedReviveTimeoutForTest,
+      changeLifecycleForRewardedReviveTest,
       setRunProgress: setStage1RunProgress,
       snapshot: stage1TestSnapshot
     });

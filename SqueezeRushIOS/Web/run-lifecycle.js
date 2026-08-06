@@ -200,6 +200,24 @@
       return true;
     }
 
+    function reviveWithRewarded(expectedResultSequence) {
+      if (state.lifecyclePhase !== PHASES.RESULT_PENDING || state.runFinalized || state.resultActionLocked) return false;
+      if (Number(expectedResultSequence) !== state.resultSequence) return false;
+      if (Math.floor(Number(state.revives) || 0) > 0 || state.rewardedReviveUsed) return false;
+
+      const resultReason = state.pendingReason || "";
+      state.resultActionLocked = true;
+      state.rewardedReviveUsed = true;
+      state.pendingReason = "";
+      transition(PHASES.ACTIVE, { source: "rewarded", resultReason });
+      emit(EVENTS.RUN_REVIVED, {
+        source: "rewarded",
+        resultReason,
+        revivesRemaining: state.revives
+      });
+      return true;
+    }
+
     function claimResultAction(expectedResultSequence, action) {
       const isResultPhase = state.lifecyclePhase === PHASES.RESULT_PENDING || state.lifecyclePhase === PHASES.FINALIZED;
       if (!isResultPhase || state.resultActionLocked) return false;
@@ -238,6 +256,7 @@
       resultShown,
       recordRewardDelta,
       reviveWithToken,
+      reviveWithRewarded,
       claimResultAction,
       finalize
     });

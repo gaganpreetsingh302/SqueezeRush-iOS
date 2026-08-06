@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Squeeze Rush Stage 4 Rewarded Revive Tests</title>
+  <style>
+    body { margin: 0; padding: 24px; font: 15px/1.45 system-ui, sans-serif; color: #172033; background: #f5f7fb; }
+    main { max-width: 1040px; margin: auto; padding: 24px; background: white; border-radius: 14px; box-shadow: 0 12px 40px #18213a18; }
+    h1 { margin-top: 0; }
+    button { padding: 10px 16px; border: 0; border-radius: 8px; color: white; background: #3154d9; font: inherit; cursor: pointer; }
+    #summary { margin: 18px 0; padding: 12px; border-radius: 8px; background: #eef2ff; font-weight: 700; }
+    #results { padding-left: 24px; }
+    .pass { color: #137333; }
+    .fail { color: #b3261e; }
+    iframe { position: fixed; width: 375px; height: 667px; left: -10000px; top: 0; border: 0; }
+  </style>
+  <script src="stage4-rewarded-revive-tests.js" defer></script>
+</head>
+<body>
+  <main>
+    <h1>Squeeze Rush Stage 4 rewarded-revive tests</h1>
+    <p>The suite loads the production embedded game in fresh frames and activates native outcomes only through the localhost-only deterministic mock.</p>
+    <button id="runTests" type="button">Run all tests</button>
+    <div id="summary" role="status">Waiting to run.</div>
+    <ol id="results"></ol>
+  </main>
+</body>
+</html>

@@ -172,11 +172,13 @@
   async function scenarioD() {
     const context = await loadGame(true);
     try {
+      context.api.startRun("daily");
+      context.api.endRun("smashed");
       context.mock.enqueue("rewarded.show", {
         outcome: "unavailable",
         error: { code: "not_implemented_stage2", message: "Unavailable in Stage 2." }
       });
-      const response = await context.bridge.request("rewarded.show", {}, { timeoutMs: 100 });
+      const response = await context.bridge.request("rewarded.show", { placement: "revive" }, { timeoutMs: 100 });
       equal(response.status, "unavailable", "Unavailable status");
       equal(response.error.code, "not_implemented_stage2", "Unavailable error code");
     } finally { closeGame(context); }
@@ -294,9 +296,10 @@
     const context = await loadGame(true);
     try {
       context.api.startRun("daily");
+      context.api.endRun("smashed");
       const before = context.api.snapshot().lifecycle;
-      context.mock.enqueue("rewarded.show", { outcome: "success", delayMs: 10, data: { earned: false } });
-      const response = await context.bridge.request("rewarded.show", {}, { timeoutMs: 100 });
+      context.mock.enqueue("rewarded.show", { outcome: "success", delayMs: 10, data: { placement: "revive", earned: false } });
+      const response = await context.bridge.request("rewarded.show", { placement: "revive" }, { timeoutMs: 100 });
       equal(response.status, "success", "Matching lifecycle response succeeds");
       equal(response.context.runId, before.runId, "Matching lifecycle runId");
       equal(response.context.resultSequence, before.resultSequence, "Matching lifecycle resultSequence");
@@ -309,9 +312,9 @@
     try {
       context.api.startRun("daily");
       const oldRunId = context.api.snapshot().lifecycle.runId;
-      context.mock.enqueue("rewarded.show", { outcome: "success", delayMs: 60 });
-      const pending = context.bridge.request("rewarded.show", {}, { timeoutMs: 150 });
       context.api.endRun("smashed");
+      context.mock.enqueue("rewarded.show", { outcome: "success", delayMs: 60 });
+      const pending = context.bridge.request("rewarded.show", { placement: "revive" }, { timeoutMs: 150 });
       context.api.retryRun();
       context.api.startRun("daily");
       assert(context.api.snapshot().lifecycle.runId !== oldRunId, "Fixture must advance to another run");
@@ -328,7 +331,7 @@
       context.api.endRun("smashed");
       const firstSequence = context.api.snapshot().lifecycle.resultSequence;
       context.mock.enqueue("rewarded.show", { outcome: "success", delayMs: 60 });
-      const pending = context.bridge.request("rewarded.show", {}, { timeoutMs: 150 });
+      const pending = context.bridge.request("rewarded.show", { placement: "revive" }, { timeoutMs: 150 });
       context.api.reviveRun();
       context.api.endRun("smashed");
       equal(context.api.snapshot().lifecycle.resultSequence, firstSequence + 1, "Fixture must advance result sequence");

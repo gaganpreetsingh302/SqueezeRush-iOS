@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [string] $Timestamp = (Get-Date -Format 'yyyyMMdd-HHmmss'),
-    [string] $BackupPath = 'D:\Games\Squeeze rush\Backups\SqueezeRushIOS-Advanced-2.0.0-pre-stage2-20260803-222252.zip'
+    [string] $BackupPath = 'D:\Games\Squeeze rush\SqueezeRush\Backups\SqueezeRushIOS-Advanced-2.0.0-pre-stage2-20260803-222252.zip'
 )
 
 $ErrorActionPreference = 'Stop'

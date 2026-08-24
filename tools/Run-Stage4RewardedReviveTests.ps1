@@ -1,7 +1,7 @@
 [CmdletBinding()]
 param(
     [ValidateRange(1024, 65535)]
-    [int] $Port = 8873
+    [int] $Port = 8874
 )
 
 $ErrorActionPreference = 'Stop'
@@ -13,7 +13,7 @@ $edgeCandidates = @(
 )
 $edge = $edgeCandidates | Where-Object { Test-Path -LiteralPath $_ -PathType Leaf } | Select-Object -First 1
 if (-not $edge) {
-    throw 'Microsoft Edge was not found. Open tools\stage2-bridge-tests.html through a localhost server on another modern browser.'
+    throw 'Microsoft Edge was not found. Open tools\stage4-rewarded-revive-tests.html through localhost in another modern browser.'
 }
 
 $existingListener = Get-NetTCPConnection -LocalAddress 127.0.0.1 -LocalPort $Port -State Listen -ErrorAction SilentlyContinue
@@ -22,13 +22,13 @@ if ($existingListener) {
 }
 
 $runToken = [guid]::NewGuid().ToString('N')
-$profilePath = Join-Path $env:TEMP "squeeze-rush-stage2-edge-$runToken"
-$stdoutPath = Join-Path $env:TEMP "squeeze-rush-stage2-http-$runToken.out.log"
-$stderrPath = Join-Path $env:TEMP "squeeze-rush-stage2-http-$runToken.err.log"
+$profilePath = Join-Path $env:TEMP "squeeze-rush-stage4-edge-$runToken"
+$stdoutPath = Join-Path $env:TEMP "squeeze-rush-stage4-http-$runToken.out.log"
+$stderrPath = Join-Path $env:TEMP "squeeze-rush-stage4-http-$runToken.err.log"
 $serverProcess = $null
 $serverPid = $null
 
-function Remove-Stage2TempPath {
+function Remove-Stage4TempPath {
     param([Parameter(Mandatory)] [string] $Path)
     if (-not (Test-Path -LiteralPath $Path)) { return }
 
@@ -70,7 +70,7 @@ try {
     }
     $serverPid = $listener.OwningProcess
 
-    $url = "http://127.0.0.1:$Port/tools/stage2-bridge-tests.html"
+    $url = "http://127.0.0.1:$Port/tools/stage4-rewarded-revive-tests.html"
     $previousPreference = $ErrorActionPreference
     $ErrorActionPreference = 'Continue'
     try {
@@ -80,7 +80,7 @@ try {
             --disable-sync `
             --no-first-run `
             --user-data-dir=$profilePath `
-            --virtual-time-budget=35000 `
+            --virtual-time-budget=60000 `
             --dump-dom `
             $url 2>&1 | Out-String
     }
@@ -88,9 +88,9 @@ try {
         $ErrorActionPreference = $previousPreference
     }
 
-    $summaryMatch = [regex]::Match($dom, 'STAGE 2 BRIDGE TEST RESULT:[^<\r\n]+')
+    $summaryMatch = [regex]::Match($dom, 'STAGE 4 REWARDED REVIVE TEST RESULT:[^<\r\n]+')
     if (-not $summaryMatch.Success) {
-        throw "The browser did not return a Stage 2 bridge test summary.`n$($dom.Substring(0, [Math]::Min($dom.Length, 5000)))"
+        throw "The browser did not return a Stage 4 rewarded-revive summary.`n$($dom.Substring(0, [Math]::Min($dom.Length, 5000)))"
     }
 
     Write-Host $summaryMatch.Value
@@ -101,30 +101,7 @@ try {
         Write-Host "$status`: $message"
     }
 
-    $probePath = Join-Path $projectRoot 'tools\stage2-file-mock-probe.html'
-    $probeUrl = ([System.Uri] $probePath).AbsoluteUri + '?nativeBridgeMock=1'
-    $previousPreference = $ErrorActionPreference
-    $ErrorActionPreference = 'Continue'
-    try {
-        $probeDom = & $edge `
-            --headless=new `
-            --disable-gpu `
-            --disable-sync `
-            --no-first-run `
-            --user-data-dir=$profilePath `
-            --virtual-time-budget=3000 `
-            --dump-dom `
-            $probeUrl 2>&1 | Out-String
-    }
-    finally {
-        $ErrorActionPreference = $previousPreference
-    }
-    if ($probeDom -notmatch 'FILE MOCK GATE: PASS') {
-        throw 'The native bridge mock activated on a file URL or the file probe failed to load.'
-    }
-    Write-Host 'FILE MOCK GATE: PASS'
-
-    if ($summaryMatch.Value -notmatch '21/21 passed, 0 failed') {
+    if ($summaryMatch.Value -notmatch '34/34 passed, 0 failed') {
         exit 1
     }
 }
@@ -135,7 +112,7 @@ finally {
     elseif ($serverProcess -and -not $serverProcess.HasExited) {
         Stop-Process -Id $serverProcess.Id -Force -ErrorAction SilentlyContinue
     }
-    Remove-Stage2TempPath -Path $profilePath
-    Remove-Stage2TempPath -Path $stdoutPath
-    Remove-Stage2TempPath -Path $stderrPath
+    Remove-Stage4TempPath -Path $profilePath
+    Remove-Stage4TempPath -Path $stdoutPath
+    Remove-Stage4TempPath -Path $stderrPath
 }

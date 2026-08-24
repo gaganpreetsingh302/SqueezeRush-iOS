@@ -169,11 +169,11 @@ Test-Stage3BCondition ($consent.Contains('private weak var presentationOwner: UI
     'Consent, ad, and bridge ownership back to the controller remains weak'
 
 $webHashes = [ordered]@{
-    'game.js'='E6318E1BF8D533B6AD6F02B9B053A730BD0FB598CD9F5053A16BBE9D25B9C973';
-    'index.html'='6785CE9289404B0F72681871C34C225364C07E431BA01411278D85C3FA24C39C';
-    'native-bridge.js'='4DD3FB2BC5B1A4A0349BAED9B1065E5F2CB1B833EE4ADE1EE9F10959D1092D50';
-    'run-lifecycle.js'='F0EED9B5257260C09A81E54626E146950C202359405AE367FE6E1D3EB680910F';
-    'styles.css'='AF2C5C55B050A7BA77139712F0D081A5967AD5E2DFBB97F6F5F8C3BFB635FB53'
+    'game.js'='49951E3BA0D3321FC1349EEFF5A2D8D5975F45711510403C3AF9A1D3B0D15B58';
+    'index.html'='F09B7CC871DEFD5C6CE823BC46AE63E4E95E01E6A179BD225FCC80307816C2F6';
+    'native-bridge.js'='33683B8049A2EB9E0E89B53A45012C3826318D5F2D1C11004E6832CB1F72BF95';
+    'run-lifecycle.js'='6D0AF635A9C638183035E312BAE26E7076B1561635C649EB7F3266BE124C6397';
+    'styles.css'='7C3B6BAFF43C1ED04F631BA302A6F2902AF29FD715ABF1FAE9979E07BAD5D6CB'
 }
 $webUnchanged = $true
 foreach ($entry in $webHashes.GetEnumerator()) {
@@ -182,7 +182,7 @@ foreach ($entry in $webHashes.GetEnumerator()) {
         $webUnchanged = $false
     }
 }
-Test-Stage3BCondition $webUnchanged 'All five production Web files remain byte-identical'
+Test-Stage3BCondition $webUnchanged 'All five production Web files match the audited Stage 4 controlled baseline'
 
 $protectedTrees = @(
     [pscustomobject]@{Path=(Join-Path $workspaceRoot 'SqueezeRush');Count=9},
@@ -203,7 +203,7 @@ Test-Stage3BCondition ($protected -and
 Test-Stage3BCondition (-not $allSwift.Contains('rewardedReviveUsed = true') -and
     -not $allSwift.Contains('rewardDoubleClaimed = true') -and
     -not $allSwift.Contains('career.xp') -and -not $allSwift.Contains('career.cores')) `
-    'No Stage 4 gameplay ad integration exists'
+    'Native ad code contains no gameplay reward or career mutation'
 
 $swiftCompiler = Get-Command swiftc -ErrorAction SilentlyContinue
 if ($swiftCompiler) {

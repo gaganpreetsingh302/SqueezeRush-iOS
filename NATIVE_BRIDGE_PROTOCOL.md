@@ -9,9 +9,9 @@
 - Native implementation: `SqueezeRushNativeBridge`
 - Minimum iOS target: iOS 15.0
 
-The bridge is a typed request/response boundary between the bundled Web game and its native Swift host. Protocol version 1 Stage 3 keeps the Stage 2 transport unchanged and adds test-only native implementations for rewarded ads, interstitial ads, and UMP consent status/privacy-options presentation. Haptics and sharing remain implemented. Purchases, entitlements, analytics, review, and More Games remain reserved and unavailable.
+The bridge is a typed request/response boundary between the bundled Web game and its native Swift host. Protocol version 1 keeps the Stage 2 transport unchanged. Stage 3 added test-only native implementations for rewarded ads, interstitial ads, and UMP consent status/privacy-options presentation. Stage 4 connects only the existing rewarded-revive lifecycle to the test rewarded-ad service. Haptics and sharing remain implemented. Purchases, entitlements, analytics, review, and More Games remain reserved and unavailable.
 
-Stage 3 deliberately does not connect the native ad actions to gameplay. The bundled `native-bridge.js` remains byte-identical to Stage 2 and retains its Stage 2 empty-payload guard for reserved actions. Therefore ordinary game code cannot invoke ads, no visible monetization UI exists, and native ad presentation is limited to native/manual integration testing. A later gameplay-monetization stage must update the JavaScript payload validation deliberately before using these actions; it must not change the v1 envelope or weaken lifecycle stale checks.
+Stage 4 deliberately enables only `{ "placement": "revive" }` in the bundled JavaScript validator. The native validator still reserves `double_rewards`, but no Double Rewards UI or caller exists. There is no interstitial gameplay caller, cadence, or automatic presentation. The v1 envelope and native action allowlist are unchanged.
 
 ## JavaScript API
 
@@ -106,18 +106,18 @@ Malformed, unknown, duplicate, wrong-version, wrong-action, or otherwise unrouta
 | `stale` | JavaScript determined that a lifecycle-scoped callback belongs to an old run or result sequence. |
 | `timeout` | No valid response arrived before the configured deadline; the request was removed from the pending registry. |
 
-Ad dismissal is not an earned reward. In Stage 3, rewarded success requires the Google `userDidEarnReward` callback followed by dismissal. A request being sent, an ad loading or presenting, an impression, a click, dismissal alone, or a mock outcome never changes score, XP, Cores, revive flags, purchase state, or entitlements.
+Ad dismissal is not an earned reward. Rewarded success requires the Google `userDidEarnReward` callback followed by dismissal. A request being sent, an ad loading or presenting, an impression, a click, dismissal alone, or an unverified mock outcome never changes score, XP, Cores, revive flags, purchase state, or entitlements. Stage 4 application code claims a revive only after it independently verifies `status: success`, `earned: true`, placement `revive`, the active request identity, and the current pending run/result context.
 
 ## Action allowlist and native payload validation
 
 JavaScript and Swift contain the same exact action list:
 
-| Action | Protocol v1 native payload | Stage 3 behavior |
+| Action | Protocol v1 native payload | Current behavior |
 |---|---|---|
 | `bridge.capabilities` | Empty object. | Fully implemented. |
 | `haptic.perform` | Exactly `{ "style": string }`; style is `light`, `medium`, `heavy`, `success`, or `error`. | Performs the existing UIKit feedback and returns `success`. Unknown styles return `invalid_request`. |
 | `share.present` | Exactly `{ "text": string }`; trimmed content must be non-empty and at most 1,000 characters. | Presents the existing `UIActivityViewController`. Arbitrary activity-controller configuration is rejected because no other keys are accepted. |
-| `rewarded.show` | Exactly `{ "placement": "revive" }` or `{ "placement": "double_rewards" }`; requires non-null `runId` and `resultSequence`, and phase `result_pending`. | Test-ad presentation foundation. Consent, SDK readiness, ad readiness, and presentation lock are checked. Earned success settles only after the earned callback and dismissal. No gameplay reward is granted. |
+| `rewarded.show` | Native validation recognizes exactly `{ "placement": "revive" }` or `{ "placement": "double_rewards" }`; requires non-null `runId` and `resultSequence`, and phase `result_pending`. The Stage 4 bundled JavaScript validator permits only `revive`. | The native test-ad service checks consent, SDK readiness, ad readiness, and the presentation lock. Earned success settles only after the earned callback and dismissal. Native code grants no gameplay reward. Stage 4 game code may resume the same run once only for a verified earned `revive` response. `double_rewards` remains disconnected. |
 | `interstitial.show` | Exactly `{ "placement": "run_end" }`; requires non-null `runId` and `resultSequence`, and phase `result_pending` or `finalized`. | Explicit test-ad presentation foundation. There is no cadence, cooldown, or automatic caller. Success settles only after normal dismissal. |
 | `purchase.buy` | Empty object; no product ID exists. | Returns `unavailable` / `not_implemented_stage3`. |
 | `purchase.restore` | Empty object. | Returns `unavailable` / `not_implemented_stage3`. |
@@ -186,8 +186,10 @@ A browser with no native handler returns the unchanged local Stage 2 `success` c
 For a lifecycle-scoped response, JavaScript verifies:
 
 1. response `runId` and `resultSequence` equal the values captured in the request;
-2. the current `SqueezeRushLifecycle.snapshot()` still has the request's non-null `runId`;
-3. the current snapshot still has the request's non-null `resultSequence`.
+2. response lifecycle phase equals the phase captured in the request;
+3. the current `SqueezeRushLifecycle.snapshot()` still has the request's non-null `runId`;
+4. the current snapshot still has the request's non-null `resultSequence`;
+5. the current snapshot still has the request's non-null lifecycle phase.
 
 Any mismatch is converted to a standardized `stale` response with error code `stale_lifecycle_context` before application code receives it. The native/mocked result cannot revive a different run or reward a later result.
 
@@ -196,6 +198,7 @@ Any mismatch is converted to a standardized `stale` response with error code `st
 - Default timeout: 15,000 milliseconds.
 - Allowed configured range: 1 through 120,000 milliseconds.
 - The game uses 2,500 milliseconds for fire-and-forget haptics and 60,000 milliseconds for the share sheet.
+- The Stage 4 rewarded-revive gameplay request uses the allowed 120,000-millisecond maximum while the native ad is presented.
 - Every request ID is unique for the page session and is never reused.
 - Pending requests are held only in an in-memory `Map`.
 - Concurrent requests have independent timers and response routing.
@@ -221,6 +224,12 @@ No request data is interpolated into executable JavaScript.
 `SqueezeRushConsentManager` invokes the once-per-launch UMP information update and, immediately after that invocation returns, publishes the current UMP snapshot. This ordering lets UMP expose an authoritative previous-session `canRequestAds` value without waiting for the network completion. The UMP callback is queued onto the main thread, and the consent flow state refuses completion processing until the post-request snapshot has been published; duplicate completions are ignored. An update error is normalized and published without attempting a required form. A successful update clears stale error state, publishes, and then calls `ConsentForm.loadAndPresentIfRequired(from:)`; successful consent/privacy form completion also clears stale operation errors. Privacy-options presentation requires UMP's explicit `.required` privacy-options status and never falls back to general `formStatus`. `SqueezeRushAdManager` requests `MobileAds` startup at most once after consent permits ads. SDK completion is recorded even if consent changes while startup is in flight, but loading and presentation still require the current `ConsentInformation.shared.canRequestAds` value. Publisher first-party ID is disabled before SDK startup. Both services hold their presentation owner weakly.
 
 The ad manager owns one full-screen presentation session. Rewarded and interstitial operations share that lock. Every session can settle once; later delegate callbacks are ignored. Ads are cleared and scheduled to reload after dismissal or presentation failure. Native code returns earned metadata but never grants a revive, XP, Cores, or a doubled reward.
+
+## Stage 4 rewarded-revive application rule
+
+The game refreshes capabilities once for an otherwise eligible death result and shows the separate `rewardedReviveBtn` only when native rewarded support, consent, and rewarded readiness are all true. A token revive always takes precedence. Sprint time-up and modes whose existing configuration forbids revives never receive the offer.
+
+Starting an ad request does not claim or finalize the result. While it is pending, the game disables conflicting result controls and tracks one active request identity. A cancelled, unavailable, failed, stale, timed-out, or unearned result leaves the same result pending and grants nothing. A verified earned result atomically calls `reviveWithRewarded(resultSequence)`, sets `rewardedReviveUsed` once, emits `run_revived` with source `rewarded`, and uses the same continuation cleanup as a token revive. It preserves `runId`, `career.totalRuns`, score/progression state, token inventory, and the Stage 1 `awardSnapshot` delta mechanism. It does not award XP or Cores.
 
 ## Deterministic mock
 
@@ -251,7 +260,8 @@ Supported descriptors cover success, unavailable, cancelled, failed, delayed, no
 - No arbitrary native URL opening or activity-controller configuration.
 - No network calls in the bridge.
 - No bridge or capability localStorage keys.
-- No purchase, entitlement, revive, XP, Core, review, analytics, or gameplay mutation in Stage 3.
+- Native ad callbacks never mutate purchase, entitlement, revive, XP, Core, review, analytics, or gameplay state.
+- Stage 4 JavaScript permits one revive only after verified earned metadata and an exact current run/result/phase match; duplicate and late callbacks are inert.
 - UMP is the only consent-state authority; the app does not parse raw IAB strings.
 - The previous-session ad-permission check occurs only after invoking `requestConsentInfoUpdate`, and privacy-options presentation requires UMP's explicit `required` status.
 - Google Mobile Ads startup cannot be requested until UMP reports `canRequestAds`; ad loading and presentation always require the current value to remain true.
@@ -260,7 +270,7 @@ Supported descriptors cover success, unavailable, cancelled, failed, delayed, no
 - Operational errors resolve defensively so gameplay remains independent of bridge availability.
 - Detailed native validation logging exists only in DEBUG builds.
 
-## Stage 4+ extension rule
+## Stage 5+ extension rule
 
 Later stages keep the v1 envelope, fixed receiver, allowlisted action names, request IDs, validation, timeouts, concurrency, and lifecycle stale checks. Gameplay integration plugs in by:
 

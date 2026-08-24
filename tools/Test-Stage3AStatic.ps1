@@ -66,8 +66,13 @@ Test-Stage3ACondition ($metadata.mobileAds.version -eq '13.7.0' -and
     $metadata.ump.productName -eq 'GoogleUserMessagingPlatform' -and
     $metadata.ump.importModule -eq 'UserMessagingPlatform') `
     'Package metadata records exact direct UMP product and Swift import'
-Test-Stage3ACondition (-not (Test-Path -LiteralPath (Join-Path $projectRoot 'SqueezeRushIOS.xcodeproj\project.xcworkspace\xcshareddata\swiftpm\Package.resolved'))) `
-    'No Package.resolved was fabricated on Windows'
+$packageResolvedPath = Join-Path $projectRoot 'SqueezeRushIOS.xcodeproj\project.xcworkspace\xcshareddata\swiftpm\Package.resolved'
+$packageResolved = if (Test-Path -LiteralPath $packageResolvedPath -PathType Leaf) { Get-Content -Raw -LiteralPath $packageResolvedPath | ConvertFrom-Json } else { $null }
+$resolvedPins = if ($packageResolved) { @($packageResolved.pins) } else { @() }
+$resolvedAds = @($resolvedPins | Where-Object identity -eq 'swift-package-manager-google-mobile-ads')
+$resolvedUmp = @($resolvedPins | Where-Object identity -eq 'swift-package-manager-google-user-messaging-platform')
+Test-Stage3ACondition ($resolvedAds.Count -eq 1 -and $resolvedAds[0].state.version -eq '13.7.0' -and $resolvedUmp.Count -eq 1 -and $resolvedUmp[0].state.version -eq '3.1.0') `
+    'Xcode Cloud Package.resolved selects the exact audited Google package versions'
 
 $debugBlock = [regex]::Match($project, 'A1B2C3D4E5F6071829300023 /\* Debug \*/ = \{(?<body>.*?)\n\s*\};\n\s*name = Debug;', 'Singleline').Groups['body'].Value
 $releaseBlock = [regex]::Match($project, 'A1B2C3D4E5F6071829300024 /\* Release \*/ = \{(?<body>.*?)\n\s*\};\n\s*name = Release;', 'Singleline').Groups['body'].Value
@@ -101,17 +106,17 @@ Test-Stage3ACondition (-not $productionText.Contains('LoopBloom') -and
     'No More Games or URL-opening behavior exists'
 
 $webHashes = [ordered]@{
-    'game.js'='E6318E1BF8D533B6AD6F02B9B053A730BD0FB598CD9F5053A16BBE9D25B9C973';
-    'index.html'='6785CE9289404B0F72681871C34C225364C07E431BA01411278D85C3FA24C39C';
-    'native-bridge.js'='4DD3FB2BC5B1A4A0349BAED9B1065E5F2CB1B833EE4ADE1EE9F10959D1092D50';
-    'run-lifecycle.js'='F0EED9B5257260C09A81E54626E146950C202359405AE367FE6E1D3EB680910F';
-    'styles.css'='AF2C5C55B050A7BA77139712F0D081A5967AD5E2DFBB97F6F5F8C3BFB635FB53'
+    'game.js'='49951E3BA0D3321FC1349EEFF5A2D8D5975F45711510403C3AF9A1D3B0D15B58';
+    'index.html'='F09B7CC871DEFD5C6CE823BC46AE63E4E95E01E6A179BD225FCC80307816C2F6';
+    'native-bridge.js'='33683B8049A2EB9E0E89B53A45012C3826318D5F2D1C11004E6832CB1F72BF95';
+    'run-lifecycle.js'='6D0AF635A9C638183035E312BAE26E7076B1561635C649EB7F3266BE124C6397';
+    'styles.css'='7C3B6BAFF43C1ED04F631BA302A6F2902AF29FD715ABF1FAE9979E07BAD5D6CB'
 }
 $webUnchanged = $true
 foreach($entry in $webHashes.GetEnumerator()){
     if((Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $projectRoot (Join-Path 'SqueezeRushIOS\Web' $entry.Key))).Hash -ne $entry.Value){$webUnchanged=$false}
 }
-Test-Stage3ACondition $webUnchanged 'All five production Web files remain byte-identical to Stage 3'
+Test-Stage3ACondition $webUnchanged 'All five production Web files match the audited Stage 4 controlled baseline'
 
 $protectedTrees = @(
     [pscustomobject]@{Path=(Join-Path $workspaceRoot 'SqueezeRush');Count=9},

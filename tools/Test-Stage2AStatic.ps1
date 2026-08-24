@@ -81,11 +81,11 @@ Test-Stage2ACondition (-not $swiftProduction.Contains('as!')) `
     'H. No Swift force-cast was introduced'
 
 $unchangedWebHashes = [ordered]@{
-    'SqueezeRushIOS\Web\game.js' = 'E6318E1BF8D533B6AD6F02B9B053A730BD0FB598CD9F5053A16BBE9D25B9C973'
-    'SqueezeRushIOS\Web\index.html' = '6785CE9289404B0F72681871C34C225364C07E431BA01411278D85C3FA24C39C'
-    'SqueezeRushIOS\Web\native-bridge.js' = '4DD3FB2BC5B1A4A0349BAED9B1065E5F2CB1B833EE4ADE1EE9F10959D1092D50'
-    'SqueezeRushIOS\Web\run-lifecycle.js' = 'F0EED9B5257260C09A81E54626E146950C202359405AE367FE6E1D3EB680910F'
-    'SqueezeRushIOS\Web\styles.css' = 'AF2C5C55B050A7BA77139712F0D081A5967AD5E2DFBB97F6F5F8C3BFB635FB53'
+    'SqueezeRushIOS\Web\game.js' = '49951E3BA0D3321FC1349EEFF5A2D8D5975F45711510403C3AF9A1D3B0D15B58'
+    'SqueezeRushIOS\Web\index.html' = 'F09B7CC871DEFD5C6CE823BC46AE63E4E95E01E6A179BD225FCC80307816C2F6'
+    'SqueezeRushIOS\Web\native-bridge.js' = '33683B8049A2EB9E0E89B53A45012C3826318D5F2D1C11004E6832CB1F72BF95'
+    'SqueezeRushIOS\Web\run-lifecycle.js' = '6D0AF635A9C638183035E312BAE26E7076B1561635C649EB7F3266BE124C6397'
+    'SqueezeRushIOS\Web\styles.css' = '7C3B6BAFF43C1ED04F631BA302A6F2902AF29FD715ABF1FAE9979E07BAD5D6CB'
 }
 $webHashesMatch = $true
 foreach ($entry in $unchangedWebHashes.GetEnumerator()) {
@@ -96,7 +96,7 @@ foreach ($entry in $unchangedWebHashes.GetEnumerator()) {
     }
 }
 Test-Stage2ACondition $webHashesMatch `
-    'I. All five production Web files remain byte-identical to Stage 2'
+    'I. All five production Web files match the audited Stage 4 controlled baseline'
 
 Test-Stage2ACondition (
     -not $project.Contains('WeakScriptMessageHandler.swift') -and

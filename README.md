@@ -30,7 +30,7 @@ Use `XCODE_CLOUD_SETUP.md` for the exact App Store Connect and workflow settings
 - Marketing version: `2.0.0`
 - Build: `3`
 - Bundle identifier: `com.kasiga.squeezerush`
-- Canonical web source on the Windows workstation: `D:\Games\Squeeze rush\SqueezeRush`
+- Canonical web source on the Windows workstation: `D:\Games\Squeeze rush\SqueezeRush\SqueezeRush`
 - Privacy manifest: generated into the built app by the `Generate Privacy Manifest` build phase
 - Launch screen: `UILaunchScreen` in `Info.plist`; no storyboard file is required
 

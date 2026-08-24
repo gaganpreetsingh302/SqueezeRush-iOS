@@ -74,6 +74,9 @@ private enum SqueezeRushValidatedPayload {
     case rewarded(SqueezeRushRewardedPlacement)
     case interstitial(SqueezeRushInterstitialPlacement)
     case consent(SqueezeRushConsentOperation)
+    case purchaseBuy
+    case purchaseRestore
+    case entitlementsRefresh
     case unavailable
 }
 
@@ -93,17 +96,20 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
     private weak var userContentController: WKUserContentController?
     private weak var adService: SqueezeRushAdServing?
     private weak var consentService: SqueezeRushConsentServing?
+    private weak var purchaseService: SqueezeRushPurchaseServing?
     private var inFlightRequests: [String: SqueezeRushBridgeAction] = [:]
     private var shareRequestId: String?
 
     init(
         presentationOwner: UIViewController,
         adService: SqueezeRushAdServing? = nil,
-        consentService: SqueezeRushConsentServing? = nil
+        consentService: SqueezeRushConsentServing? = nil,
+        purchaseService: SqueezeRushPurchaseServing? = nil
     ) {
         self.presentationOwner = presentationOwner
         self.adService = adService
         self.consentService = consentService
+        self.purchaseService = purchaseService
         super.init()
     }
 
@@ -126,6 +132,7 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
         presentationOwner = nil
         adService = nil
         consentService = nil
+        purchaseService = nil
         shareRequestId = nil
         inFlightRequests.removeAll()
     }
@@ -272,10 +279,13 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
                 return nil
             }
             return .consent(operation)
-        case .purchaseBuy,
-             .purchaseRestore,
-             .entitlementsRefresh,
-             .reviewRequest,
+        case .purchaseBuy:
+            return request.payload.isEmpty ? .purchaseBuy : nil
+        case .purchaseRestore:
+            return request.payload.isEmpty ? .purchaseRestore : nil
+        case .entitlementsRefresh:
+            return request.payload.isEmpty ? .entitlementsRefresh : nil
+        case .reviewRequest,
              .moreGamesOpen,
              .analyticsTrack:
             return request.payload.isEmpty ? .unavailable : nil
@@ -307,6 +317,12 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
             presentInterstitial(placement: placement, request: request)
         case .consent(let operation):
             handleConsent(operation: operation, request: request)
+        case .purchaseBuy:
+            handlePurchase(request: request)
+        case .purchaseRestore:
+            handleRestore(request: request)
+        case .entitlementsRefresh:
+            handleEntitlementsRefresh(request: request)
         case .unavailable:
             settle(
                 request,
@@ -419,6 +435,52 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
                 }
             }
         }
+    }
+
+    private func handlePurchase(request: SqueezeRushBridgeRequest) {
+        guard let purchaseService else {
+            settleUnavailable(request, code: "purchase_service_unavailable")
+            return
+        }
+        purchaseService.purchaseRemoveAds { [weak self] result in
+            self?.settlePurchaseOperation(result, request: request)
+        }
+    }
+
+    private func handleRestore(request: SqueezeRushBridgeRequest) {
+        guard let purchaseService else {
+            settleUnavailable(request, code: "purchase_service_unavailable")
+            return
+        }
+        purchaseService.restorePurchases { [weak self] result in
+            self?.settlePurchaseOperation(result, request: request)
+        }
+    }
+
+    private func handleEntitlementsRefresh(request: SqueezeRushBridgeRequest) {
+        guard let purchaseService else {
+            settleUnavailable(request, code: "purchase_service_unavailable")
+            return
+        }
+        purchaseService.refreshEntitlements { [weak self] result in
+            self?.settlePurchaseOperation(result, request: request)
+        }
+    }
+
+    private func settlePurchaseOperation(
+        _ result: SqueezeRushPurchaseOperationResult,
+        request: SqueezeRushBridgeRequest
+    ) {
+        let status = Self.bridgeStatus(result.status)
+        settle(
+            request,
+            status: status,
+            data: Self.purchaseDictionary(result.snapshot),
+            error: status == .success ? nil : SqueezeRushBridgeError(
+                code: result.errorCode ?? "purchase_operation_failed",
+                message: "The purchase operation could not be completed."
+            )
+        )
     }
 
     private func settleAdOperation(
@@ -737,6 +799,11 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
             interstitialReady: false,
             presentationBusy: false
         )
+        let purchaseSnapshot = purchaseService?.snapshot ?? SqueezeRushPurchaseSnapshot(
+            productAvailable: false,
+            removeAdsEntitled: false,
+            localizedPrice: nil
+        )
         return [
             "nativeBridge": true,
             "protocolVersion": Self.protocolVersion,
@@ -745,9 +812,9 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
             "haptics": true,
             "rewardedAds": true,
             "interstitialAds": true,
-            "purchases": false,
-            "restorePurchases": false,
-            "entitlements": false,
+            "purchases": purchaseSnapshot.productAvailable,
+            "restorePurchases": purchaseService != nil,
+            "entitlements": purchaseService != nil,
             "reviewRequest": false,
             "moreGames": false,
             "analytics": false,
@@ -758,7 +825,18 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
             "rewardedAdReady": adSnapshot.rewardedReady,
             "interstitialAdReady": adSnapshot.interstitialReady,
             "privacyOptionsRequired": consentSnapshot.privacyOptionsRequired == .required,
-            "consentStatus": consentSnapshot.consentStatus.rawValue
+            "consentStatus": consentSnapshot.consentStatus.rawValue,
+            "removeAdsEntitled": purchaseSnapshot.removeAdsEntitled,
+            "removeAdsPrice": purchaseSnapshot.localizedPrice.map { $0 as Any } ?? NSNull()
+        ]
+    }
+
+    private static func purchaseDictionary(_ snapshot: SqueezeRushPurchaseSnapshot) -> [String: Any] {
+        [
+            "product": "remove_ads",
+            "productAvailable": snapshot.productAvailable,
+            "removeAdsEntitled": snapshot.removeAdsEntitled,
+            "localizedPrice": snapshot.localizedPrice.map { $0 as Any } ?? NSNull()
         ]
     }
 
@@ -775,6 +853,19 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
     }
 
     private static func bridgeStatus(_ status: SqueezeRushAdOperationStatus) -> SqueezeRushBridgeStatus {
+        switch status {
+        case .success:
+            return .success
+        case .unavailable:
+            return .unavailable
+        case .cancelled:
+            return .cancelled
+        case .failed:
+            return .failed
+        }
+    }
+
+    private static func bridgeStatus(_ status: SqueezeRushPurchaseOperationStatus) -> SqueezeRushBridgeStatus {
         switch status {
         case .success:
             return .success

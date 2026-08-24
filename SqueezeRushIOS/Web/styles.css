@@ -968,6 +968,30 @@ h2 {
   margin-top: 10px;
 }
 
+.monetization-actions {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.monetization-actions button {
+  padding: 10px 8px;
+  font-size: 0.72rem;
+}
+
+.monetization-actions small {
+  grid-column: 1 / -1;
+  color: var(--muted);
+  text-align: center;
+}
+
+@media (max-width: 420px) {
+  .monetization-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 .sound-toggle {
   min-height: 44px;
   color: var(--gold);

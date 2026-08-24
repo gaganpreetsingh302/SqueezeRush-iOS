@@ -53,6 +53,11 @@
   const shareBtn = document.getElementById("shareBtn");
   const menuBtn = document.getElementById("menuBtn");
   const soundToggleBtn = document.getElementById("soundToggleBtn");
+  const monetizationActions = document.getElementById("monetizationActions");
+  const removeAdsBtn = document.getElementById("removeAdsBtn");
+  const restorePurchasesBtn = document.getElementById("restorePurchasesBtn");
+  const privacyOptionsBtn = document.getElementById("privacyOptionsBtn");
+  const purchaseStatus = document.getElementById("purchaseStatus");
 
   const palette = ["#ff5a5f", "#2ee6a6", "#ffd166", "#4cc9f0", "#f77f00"];
   const levels = [
@@ -245,6 +250,7 @@
   let activeRewardedReviveRequest = null;
   let rewardedReviveRequestSerial = 0;
   let rewardedReviveTimeoutMs = 120000;
+  let monetizationBusy = false;
   const modeBests = readModeBests();
   const career = readCareer();
   const settings = readSettings();
@@ -389,6 +395,9 @@
     instructionOkBtn.addEventListener("click", () => beginCountdown(state.mode));
     instructionBackBtn.addEventListener("click", showMenu);
     soundToggleBtn.addEventListener("click", toggleSound);
+    removeAdsBtn.addEventListener("click", purchaseRemoveAds);
+    restorePurchasesBtn.addEventListener("click", restorePurchases);
+    privacyOptionsBtn.addEventListener("click", presentPrivacyOptions);
 
     document.addEventListener("pointerdown", unlockAudio, { passive: true });
 
@@ -1015,6 +1024,99 @@
     updateModeBestBadges();
     renderCareer();
     renderContracts();
+    refreshMonetization();
+  }
+
+  function setMonetizationBusy(value) {
+    monetizationBusy = value;
+    removeAdsBtn.disabled = value;
+    restorePurchasesBtn.disabled = value;
+    privacyOptionsBtn.disabled = value;
+  }
+
+  async function refreshMonetization() {
+    if (!window.SqueezeRushNative?.isNativeAvailable?.()) {
+      monetizationActions.classList.add("hidden");
+      return;
+    }
+
+    try {
+      const response = await window.SqueezeRushNative.getCapabilities({ refresh: true, timeoutMs: 5000 });
+      if (response.status !== "success") throw new Error("capabilities_unavailable");
+      const capabilities = response.data || {};
+      const visible = capabilities.restorePurchases === true
+        || capabilities.purchases === true
+        || capabilities.privacyOptionsRequired === true;
+      monetizationActions.classList.toggle("hidden", !visible);
+      removeAdsBtn.classList.toggle("hidden", capabilities.purchases !== true || capabilities.removeAdsEntitled === true);
+      restorePurchasesBtn.classList.toggle("hidden", capabilities.restorePurchases !== true);
+      privacyOptionsBtn.classList.toggle("hidden", capabilities.privacyOptionsRequired !== true);
+      removeAdsBtn.textContent = capabilities.removeAdsPrice
+        ? `Remove Ads ${capabilities.removeAdsPrice}`
+        : "Remove Ads";
+      purchaseStatus.textContent = capabilities.removeAdsEntitled === true
+        ? "Ads removed on this Apple ID. Rewarded revives remain optional."
+        : "Purchases are restored from your store account.";
+    } catch (error) {
+      monetizationActions.classList.add("hidden");
+    }
+  }
+
+  async function purchaseRemoveAds() {
+    if (monetizationBusy) return;
+    setMonetizationBusy(true);
+    purchaseStatus.textContent = "Opening the App Store...";
+    try {
+      const response = await window.SqueezeRushNative.request(
+        window.SqueezeRushNative.actions.PURCHASE_BUY,
+        {},
+        { timeoutMs: 120000 }
+      );
+      purchaseStatus.textContent = response.status === "success" && response.data?.removeAdsEntitled === true
+        ? "Purchase complete. Ads removed."
+        : response.status === "cancelled" ? "Purchase cancelled." : "Purchase is not available yet.";
+    } catch (error) {
+      purchaseStatus.textContent = "Purchase is not available yet.";
+    } finally {
+      setMonetizationBusy(false);
+      refreshMonetization();
+    }
+  }
+
+  async function restorePurchases() {
+    if (monetizationBusy) return;
+    setMonetizationBusy(true);
+    purchaseStatus.textContent = "Restoring purchases...";
+    try {
+      const response = await window.SqueezeRushNative.request(
+        window.SqueezeRushNative.actions.PURCHASE_RESTORE,
+        {},
+        { timeoutMs: 120000 }
+      );
+      purchaseStatus.textContent = response.status === "success" && response.data?.removeAdsEntitled === true
+        ? "Purchase restored. Ads removed."
+        : "No previous Remove Ads purchase was found.";
+    } catch (error) {
+      purchaseStatus.textContent = "Restore could not be completed.";
+    } finally {
+      setMonetizationBusy(false);
+      refreshMonetization();
+    }
+  }
+
+  async function presentPrivacyOptions() {
+    if (monetizationBusy) return;
+    setMonetizationBusy(true);
+    try {
+      await window.SqueezeRushNative.request(
+        window.SqueezeRushNative.actions.CONSENT_STATUS,
+        { operation: "presentPrivacyOptions" },
+        { timeoutMs: 120000 }
+      );
+    } finally {
+      setMonetizationBusy(false);
+      refreshMonetization();
+    }
   }
 
   function loop(time) {

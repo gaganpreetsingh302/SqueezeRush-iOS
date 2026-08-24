@@ -51,6 +51,9 @@
             ReferencedContainer = "container:SqueezeRushIOS.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <StoreKitConfigurationFileReference
+         identifier = "../SqueezeRushIOS/SqueezeRush.storekit">
+      </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction
       buildConfiguration = "Debug"

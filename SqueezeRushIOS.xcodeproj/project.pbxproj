@@ -18,6 +18,7 @@
 		A1B2C3D4E5F6071829300053 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300058 /* PrivacyInfo.xcprivacy */; };
 		A1B2C3D4E5F6071829300054 /* GoogleMobileAds in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F607182930005D /* GoogleMobileAds */; };
 		A1B2C3D4E5F6071829300060 /* GoogleUserMessagingPlatform in Frameworks */ = {isa = PBXBuildFile; productRef = A1B2C3D4E5F6071829300062 /* GoogleUserMessagingPlatform */; };
+		A1B2C3D4E5F6071829300063 /* SqueezeRushPurchaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F6071829300064 /* SqueezeRushPurchaseManager.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -30,6 +31,8 @@
 		A1B2C3D4E5F6071829300057 /* SqueezeRushAdManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SqueezeRushAdManager.swift; sourceTree = "<group>"; };
 		A1B2C3D4E5F6071829300058 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		A1B2C3D4E5F6071829300059 /* ValidateAdMobReleaseConfiguration.sh */ = {isa = PBXFileReference; lastKnownFileType = text.script.sh; path = ValidateAdMobReleaseConfiguration.sh; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300064 /* SqueezeRushPurchaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SqueezeRushPurchaseManager.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F6071829300065 /* SqueezeRush.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = SqueezeRush.storekit; sourceTree = "<group>"; };
 		A1B2C3D4E5F6071829300012 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A1B2C3D4E5F6071829300013 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		A1B2C3D4E5F6071829300015 /* Web */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Web; sourceTree = "<group>"; };
@@ -65,6 +68,8 @@
 				A1B2C3D4E5F6071829300055 /* SqueezeRushAdFlowState.swift */,
 				A1B2C3D4E5F6071829300056 /* SqueezeRushConsentManager.swift */,
 				A1B2C3D4E5F6071829300057 /* SqueezeRushAdManager.swift */,
+				A1B2C3D4E5F6071829300064 /* SqueezeRushPurchaseManager.swift */,
+				A1B2C3D4E5F6071829300065 /* SqueezeRush.storekit */,
 				A1B2C3D4E5F6071829300012 /* Info.plist */,
 				A1B2C3D4E5F6071829300058 /* PrivacyInfo.xcprivacy */,
 				A1B2C3D4E5F6071829300013 /* Assets.xcassets */,
@@ -199,6 +204,7 @@
 				A1B2C3D4E5F6071829300050 /* SqueezeRushAdFlowState.swift in Sources */,
 				A1B2C3D4E5F6071829300051 /* SqueezeRushConsentManager.swift in Sources */,
 				A1B2C3D4E5F6071829300052 /* SqueezeRushAdManager.swift in Sources */,
+				A1B2C3D4E5F6071829300063 /* SqueezeRushPurchaseManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -339,6 +345,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.kasiga.squeezerush;
 				PRODUCT_NAME = "Squeeze Rush";
 				SQUEEZE_RUSH_ADS_RELEASE_APPROVED = NO;
+				SQUEEZE_RUSH_IAP_RELEASE_APPROVED = NO;
+				SQUEEZE_RUSH_REMOVE_ADS_PRODUCT_ID = com.kasiga.squeezerush.remove_ads;
 				SQUEEZE_RUSH_UMP_DEBUG_GEOGRAPHY = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;
@@ -366,6 +374,8 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.kasiga.squeezerush;
 				PRODUCT_NAME = "Squeeze Rush";
 				SQUEEZE_RUSH_ADS_RELEASE_APPROVED = NO;
+				SQUEEZE_RUSH_IAP_RELEASE_APPROVED = NO;
+				SQUEEZE_RUSH_REMOVE_ADS_PRODUCT_ID = "";
 				SQUEEZE_RUSH_UMP_DEBUG_GEOGRAPHY = "";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = 1;

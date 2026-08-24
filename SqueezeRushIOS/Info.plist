@@ -83,6 +83,8 @@
 	<string>$(ADMOB_INTERSTITIAL_AD_UNIT_ID)</string>
 	<key>SqueezeRushRewardedAdUnitID</key>
 	<string>$(ADMOB_REWARDED_AD_UNIT_ID)</string>
+	<key>SqueezeRushRemoveAdsProductID</key>
+	<string>$(SQUEEZE_RUSH_REMOVE_ADS_PRODUCT_ID)</string>
 	<key>SqueezeRushUMPDebugGeography</key>
 	<string>$(SQUEEZE_RUSH_UMP_DEBUG_GEOGRAPHY)</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>

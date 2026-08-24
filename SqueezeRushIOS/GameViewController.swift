@@ -21,6 +21,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKScript
     private var nativeBridge: SqueezeRushNativeBridge?
     private var consentManager: SqueezeRushConsentManager?
     private var adManager: SqueezeRushAdManager?
+    private var purchaseManager: SqueezeRushPurchaseManager?
     private var didStartConsentFlow = false
 
     override var prefersStatusBarHidden: Bool {
@@ -40,17 +41,20 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKScript
         contentController.add(WeakScriptMessageHandler(delegate: self), name: "SqueezeRushIOS")
         let adManager = SqueezeRushAdManager(presentationOwner: self)
         let consentManager = SqueezeRushConsentManager(presentationOwner: self)
+        let purchaseManager = SqueezeRushPurchaseManager()
         consentManager.onConsentStateChanged = { [weak adManager] snapshot in
             adManager?.updateConsent(canRequestAds: snapshot.canRequestAds)
         }
         let nativeBridge = SqueezeRushNativeBridge(
             presentationOwner: self,
             adService: adManager,
-            consentService: consentManager
+            consentService: consentManager,
+            purchaseService: purchaseManager
         )
         nativeBridge.register(with: contentController)
         self.adManager = adManager
         self.consentManager = consentManager
+        self.purchaseManager = purchaseManager
         self.nativeBridge = nativeBridge
         contentController.addUserScript(WKUserScript(
             source: Self.platformBootstrapScript,
@@ -95,12 +99,14 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKScript
         guard !didStartConsentFlow else { return }
         didStartConsentFlow = true
         consentManager?.requestConsentUpdateOncePerLaunch()
+        purchaseManager?.start()
     }
 
     deinit {
         nativeBridge?.detach()
         consentManager?.teardown()
         adManager?.teardown()
+        purchaseManager?.teardown()
         webView?.configuration.userContentController.removeScriptMessageHandler(forName: "SqueezeRushIOS")
     }
 

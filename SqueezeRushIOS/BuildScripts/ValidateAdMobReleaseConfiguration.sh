@@ -37,6 +37,12 @@ if [ "${SQUEEZE_RUSH_ADS_RELEASE_APPROVED:-}" != "YES" ]; then
   reject "SQUEEZE_RUSH_ADS_RELEASE_APPROVED must equal YES."
 fi
 
+validate_identifier "SQUEEZE_RUSH_REMOVE_ADS_PRODUCT_ID" "${SQUEEZE_RUSH_REMOVE_ADS_PRODUCT_ID:-}" '^[A-Za-z0-9][A-Za-z0-9._-]{2,254}$'
+
+if [ "${SQUEEZE_RUSH_IAP_RELEASE_APPROVED:-}" != "YES" ]; then
+  reject "SQUEEZE_RUSH_IAP_RELEASE_APPROVED must equal YES."
+fi
+
 if [ "$failed" -ne 0 ]; then
   printf '%s\n' 'Release is intentionally blocked until production AdMob configuration is approved.' >&2
   exit 1

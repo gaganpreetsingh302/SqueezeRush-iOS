@@ -126,6 +126,15 @@
       return { placement: "revive" };
     }
 
+    if (action === ACTIONS.CONSENT_STATUS) {
+      if (Object.keys(payload).length === 0) return {};
+      if (!hasOnlyKeys(payload, ["operation"])
+        || (payload.operation !== "status" && payload.operation !== "presentPrivacyOptions")) {
+        throw new TypeError("consent.status accepts only status or presentPrivacyOptions.");
+      }
+      return { operation: payload.operation };
+    }
+
     if (Object.keys(payload).length !== 0) {
       throw new TypeError(`${action} does not accept payload fields in protocol version 1 Stage 2.`);
     }

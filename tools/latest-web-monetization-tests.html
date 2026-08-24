@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Latest Web Monetization Tests</title>
+  <style>
+    body { margin: 0; padding: 24px; font: 16px/1.45 system-ui, sans-serif; color: #18203a; background: #eef3ff; }
+    main { max-width: 900px; margin: auto; padding: 24px; border-radius: 18px; background: white; box-shadow: 0 15px 45px #7f8db433; }
+    h1 { margin-top: 0; }
+    #summary { font-weight: 800; }
+    li { margin: 8px 0; }
+    .pass { color: #087443; }
+    .fail { color: #b42318; }
+    iframe { position: fixed; left: -2000px; width: 430px; height: 932px; border: 0; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Squeeze Rush latest iOS web tests</h1>
+    <p id="summary">RUNNING</p>
+    <ol id="results"></ol>
+  </main>
+  <iframe id="game" src="../SqueezeRushIOS/Web/index.html?nativeBridgeMock=1&amp;monetizationTest=1&amp;debug=1"></iframe>
+  <script src="latest-web-monetization-tests.js"></script>
+</body>
+</html>

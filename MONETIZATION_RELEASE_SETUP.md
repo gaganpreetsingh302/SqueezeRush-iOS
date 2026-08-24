@@ -5,8 +5,15 @@ The checked-in code is safe for Debug/internal testing. Production monetization 
 ## Product model
 
 - Optional rewarded ad: revive once after an eligible failed run.
+- Automatic interstitial: eligible only at a natural break after every third finalized run, when consent is complete and an ad is ready.
 - One-time non-consumable entitlement: `Remove Ads`.
 - Remove Ads suppresses non-rewarded advertising. Optional rewarded ads remain user-initiated.
+
+## Web game synchronization
+
+The iOS `SqueezeRushIOS/Web` bundle was synchronized from the canonical latest web campaign in `../SqueezeRush` on 2026-08-23, then the iOS lifecycle and native monetization bridge were reapplied. Keep future gameplay changes canonical-first and deliberately repeat this synchronization rather than editing the mobile copy in isolation.
+
+Run `powershell -NoProfile -ExecutionPolicy Bypass -File tools/Test-LatestWebMonetization.ps1` after future syncs. The browser regression page at `tools/latest-web-monetization-tests.html` validates the rendered 25-level campaign, StoreKit controls, rewarded revive, run-end interstitial contract, and Remove Ads suppression through the local native mock.
 
 ## iOS account work
 

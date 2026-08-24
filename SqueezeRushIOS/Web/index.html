@@ -7,9 +7,18 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-title" content="Squeeze Rush">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="description" content="Squeeze through steel gates, dodge glowing crawlers, collect powers, and climb a 25-level cartoon campaign.">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Squeeze Rush">
+  <meta property="og:description" content="Squeeze. Dodge. Climb! Play the 25-level browser campaign.">
+  <meta property="og:image" content="https://squeeze-rush-2d.g-singh302.chatgpt.site/assets/social/squeeze-rush-share.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Squeeze Rush">
+  <meta name="twitter:description" content="Squeeze. Dodge. Climb! Play the 25-level browser campaign.">
+  <meta name="twitter:image" content="https://squeeze-rush-2d.g-singh302.chatgpt.site/assets/social/squeeze-rush-share.png">
   <title>Squeeze Rush</title>
   <link rel="icon" href="app-icon-192.png" type="image/png">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2026-08-13-flow-guide-v27">
   <script>
     if (location.protocol === "http:" || location.protocol === "https:") {
       const manifest = document.createElement("link");
@@ -22,6 +31,15 @@
 <body>
   <main id="app">
     <canvas id="gameCanvas" aria-label="Squeeze Rush game field"></canvas>
+    <div id="squeezeScreenGlow" class="squeeze-screen-glow" aria-hidden="true"></div>
+
+    <section id="squeezeMeter" class="squeeze-meter" role="progressbar" aria-label="Squeeze pressure" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+      <div class="squeeze-meter-copy">
+        <span>Squeeze pressure</span>
+        <strong id="squeezeStatus">Cool</strong>
+      </div>
+      <div class="squeeze-meter-track"><i id="squeezeFill"></i></div>
+    </section>
 
     <section class="hud" aria-live="polite">
       <div class="hud-chip">
@@ -36,7 +54,7 @@
         <span>Level</span>
         <strong id="levelValue">1</strong>
       </div>
-      <div class="hud-chip">
+      <div class="hud-chip power-chip">
         <span>Power</span>
         <div id="powerIcons" class="power-icons" aria-label="No active powers">
           <span class="power-empty">None</span>
@@ -45,7 +63,7 @@
     </section>
 
     <section class="mode-status" aria-live="polite">
-      <span id="modeNameValue">Daily</span>
+      <span id="modeNameValue">Campaign</span>
       <strong id="goalValue">Best 0</strong>
     </section>
 
@@ -57,13 +75,24 @@
       <div class="rush-meter-track"><i id="overdriveFill"></i></div>
     </section>
 
+    <section id="levelObjectiveHud" class="level-objective-hud" aria-live="polite" aria-hidden="true">
+      <div class="level-objective-heading">
+        <span id="levelObjectiveBadge">Level 1 mission</span>
+        <strong id="levelObjectiveTitle">Gate Basics</strong>
+      </div>
+      <div id="levelObjectiveProgress" class="level-objective-progress" role="progressbar" aria-label="Level objective progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0">
+        <i id="levelObjectiveFill"></i>
+        <span id="levelObjectiveValue">0 / 4 gates</span>
+      </div>
+    </section>
+
     <section id="menu" class="overlay">
       <div class="panel">
         <div class="brand-row">
           <img src="icon.svg" alt="" class="app-icon">
           <div>
             <h1>Squeeze Rush</h1>
-            <p id="dailyLabel">Daily run</p>
+            <p id="campaignLabel">25-level campaign</p>
           </div>
         </div>
 
@@ -73,7 +102,7 @@
           <span class="demo-bar right"></span>
         </div>
 
-        <p class="tagline">Pick a run. Clear levels, grab powers, chase the score.</p>
+        <p class="tagline">Squeeze. Dodge. Climb!</p>
 
         <div class="career-card">
           <div class="career-rank">
@@ -86,34 +115,34 @@
           </div>
         </div>
 
-        <section class="contract-board" aria-label="Run contracts">
-          <div class="section-title"><span>Rush Contracts</span><small>Earn cores every run</small></div>
+        <details class="contract-board" aria-label="Bonus challenges">
+          <summary><span>Bonus Challenges</span><small>4 missions</small></summary>
           <div id="contractList" class="contract-list"></div>
-        </section>
+        </details>
         <div class="mode-grid">
-          <button class="mode-button primary" data-mode="daily">
-            <span>Daily Run</span>
-            <small>Same challenge for everyone</small>
-            <em class="mode-best" data-best-mode="daily">Best 0</em>
+          <button class="mode-button primary" data-mode="campaign">
+            <span class="mode-icon" aria-hidden="true">★</span>
+            <span class="mode-title">Campaign</span>
+            <em id="campaignMenuStars" class="campaign-route-label">0 / 75 Stars</em>
           </button>
           <button class="mode-button" data-mode="arcade">
-            <span>Arcade</span>
-            <small>Endless score chase</small>
+            <span class="mode-icon" aria-hidden="true">∞</span>
+            <span class="mode-title">Arcade</span>
             <em class="mode-best" data-best-mode="arcade">Best 0</em>
           </button>
           <button class="mode-button" data-mode="sprint">
-            <span>60s Sprint</span>
-            <small>Fast score burst</small>
+            <span class="mode-icon mode-icon-small" aria-hidden="true">60</span>
+            <span class="mode-title">Sprint</span>
             <em class="mode-best" data-best-mode="sprint">Best 0</em>
           </button>
           <button class="mode-button" data-mode="zen">
-            <span>Zen</span>
-            <small>Practice with safety</small>
+            <span class="mode-icon" aria-hidden="true">◎</span>
+            <span class="mode-title">Zen</span>
             <em class="mode-best" data-best-mode="zen">Best 0</em>
           </button>
           <button class="mode-button danger" data-mode="chaos">
-            <span>Chaos</span>
-            <small>Hard, quick, no revives</small>
+            <span class="mode-icon" aria-hidden="true">!</span>
+            <span class="mode-title">Chaos</span>
             <em class="mode-best" data-best-mode="chaos">Best 0</em>
           </button>
         </div>
@@ -132,11 +161,128 @@
       </div>
     </section>
 
+    <section id="campaignMap" class="overlay campaign-map-overlay" aria-hidden="true">
+      <div class="campaign-map-panel">
+        <header class="campaign-map-header">
+          <button id="campaignMapBackBtn" class="map-back-button" type="button" aria-label="Back to menu">Back</button>
+          <div>
+            <p class="eyebrow">The long climb</p>
+            <h2>Campaign Ladder</h2>
+          </div>
+          <span class="campaign-map-best"><strong id="campaignStarTotal">0 / 75</strong> Stars</span>
+        </header>
+
+        <div id="campaignMapScroll" class="campaign-map-scroll" data-scrollable tabindex="0">
+          <div class="campaign-map-intro">
+            <strong>Climb. Unlock levels. Defeat the Crawler King!</strong>
+          </div>
+
+          <div id="campaignLadder" class="campaign-ladder">
+            <span class="campaign-ladder-rail" aria-hidden="true"></span>
+
+            <article class="campaign-rung first-steps" data-campaign-level="1" style="--level-accent:#4cc9f0;--level-glow:rgba(76,201,240,0.34)">
+              <div class="campaign-scene scene-first-steps" role="img" aria-label="Runner squeezing through the steel training gates">
+                <span class="scene-grid"></span>
+                <span class="scene-gate gate-left"></span>
+                <span class="scene-gate gate-right"></span>
+                <span class="scene-runner"></span>
+              </div>
+              <div class="campaign-rung-copy">
+                <span class="campaign-level-tag">Level 1</span>
+                <h3>First Steps</h3>
+                <p>Wide gates · Gentle speed</p>
+                <div class="campaign-star-row" data-star-level="0"><span>★</span><span>★</span><span>★</span><em>Next 15</em></div>
+                <div class="campaign-level-progress" data-progress-level="0" role="progressbar" aria-label="First Steps completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span>0%</span></div>
+              </div>
+            </article>
+
+            <article class="campaign-rung crawler-alley" data-campaign-level="2" style="--level-accent:#2ee6a6;--level-glow:rgba(46,230,166,0.34)">
+              <div class="campaign-scene scene-crawler-alley" role="img" aria-label="Blue glowing crawler running through Crawler Alley">
+                <span class="scene-grid"></span>
+                <span class="scene-crawler-sprite crawler-main"></span>
+                <span class="scene-crawler-sprite crawler-echo"></span>
+                <span class="scene-runner"></span>
+              </div>
+              <div class="campaign-rung-copy">
+                <span class="campaign-level-tag">Level 2</span>
+                <h3>Crawler Alley</h3>
+                <p>Blue hunters · Moving lanes</p>
+                <div class="campaign-star-row" data-star-level="1"><span>★</span><span>★</span><span>★</span><em>Next 60</em></div>
+                <div class="campaign-level-progress" data-progress-level="1" role="progressbar" aria-label="Crawler Alley completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span>0%</span></div>
+              </div>
+            </article>
+
+            <article class="campaign-rung unstable-works" data-campaign-level="3" style="--level-accent:#ffd166;--level-glow:rgba(255,209,102,0.34)">
+              <div class="campaign-scene scene-unstable-works" role="img" aria-label="Heat vents erupting inside the unstable works">
+                <span class="scene-grid"></span>
+                <span class="scene-vent vent-one"><i></i></span>
+                <span class="scene-vent vent-two"><i></i></span>
+                <span class="scene-vent vent-three"><i></i></span>
+                <span class="scene-runner"></span>
+              </div>
+              <div class="campaign-rung-copy">
+                <span class="campaign-level-tag">Level 3</span>
+                <h3>Unstable Works</h3>
+                <p>Heat bursts · Crosswinds</p>
+                <div class="campaign-star-row" data-star-level="2"><span>★</span><span>★</span><span>★</span><em>Next 130</em></div>
+                <div class="campaign-level-progress" data-progress-level="2" role="progressbar" aria-label="Unstable Works completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span>0%</span></div>
+              </div>
+            </article>
+
+            <article class="campaign-rung shadow-surge" data-campaign-level="4" style="--level-accent:#ff5a5f;--level-glow:rgba(255,90,95,0.34)">
+              <div class="campaign-scene scene-shadow-surge" role="img" aria-label="Crawler pack surging through a red warning zone">
+                <span class="scene-warning-ring ring-one"></span>
+                <span class="scene-warning-ring ring-two"></span>
+                <span class="scene-crawler-sprite crawler-main"></span>
+                <span class="scene-crawler-sprite crawler-flank"></span>
+                <span class="scene-runner"></span>
+              </div>
+              <div class="campaign-rung-copy">
+                <span class="campaign-level-tag">Level 4</span>
+                <h3>Shadow Surge</h3>
+                <p>Crawler packs · Minefields</p>
+                <div class="campaign-star-row" data-star-level="3"><span>★</span><span>★</span><span>★</span><em>Next 235</em></div>
+                <div class="campaign-level-progress" data-progress-level="3" role="progressbar" aria-label="Shadow Surge completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span>0%</span></div>
+              </div>
+            </article>
+
+            <article class="campaign-rung the-gauntlet" data-campaign-level="5" style="--level-accent:#f77f00;--level-glow:rgba(247,127,0,0.34)">
+              <div class="campaign-scene scene-gauntlet" role="img" aria-label="Runner charging through layered steel gates in Gatehouse">
+                <span class="scene-grid"></span>
+                <span class="scene-gate gate-left rear"></span>
+                <span class="scene-gate gate-right rear"></span>
+                <span class="scene-gate gate-left front"></span>
+                <span class="scene-gate gate-right front"></span>
+                <span class="scene-danger-core"></span>
+                <span class="scene-runner"></span>
+              </div>
+              <div class="campaign-rung-copy">
+                <span class="campaign-level-tag">Level 5</span>
+                <h3>Gatehouse</h3>
+                <p>Layered gates · Rising pressure</p>
+                <div class="campaign-star-row" data-star-level="4"><span>★</span><span>★</span><span>★</span><em>Next 380</em></div>
+                <div class="campaign-level-progress" data-progress-level="4" role="progressbar" aria-label="Gatehouse completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><span>0%</span></div>
+              </div>
+            </article>
+
+            <div id="campaignSummit" class="campaign-summit">
+              <span>Level 25 summit</span>
+              <strong>Defeat the Crawler King!</strong>
+            </div>
+          </div>
+        </div>
+
+        <footer class="campaign-map-actions">
+          <button id="campaignStartBtn" class="primary" type="button">Start Campaign</button>
+        </footer>
+      </div>
+    </section>
+
     <section id="instructions" class="overlay instruction-overlay" aria-live="polite">
       <div class="panel instruction-panel">
         <p id="instructionEyebrow" class="eyebrow">How to play</p>
-        <h2 id="instructionTitle">Daily Run</h2>
-        <div id="instructionArt" class="instruction-art daily" aria-label="How to play diagram">
+        <h2 id="instructionTitle">Campaign</h2>
+        <div id="instructionArt" class="instruction-art campaign" aria-label="How to play diagram">
           <span class="guide-lane left"></span>
           <span class="guide-lane right"></span>
           <span class="guide-wall top-left"></span>
@@ -169,7 +315,7 @@
         <h2 id="finalScore">0</h2>
         <p id="resultLine" class="tagline">Score locked.</p>
         <div class="result-stats">
-          <span><small>Gates</small><strong id="resultGates">0</strong></span>
+          <span><small>Encounters</small><strong id="resultGates">0</strong></span>
           <span><small>Perfect</small><strong id="resultPerfect">0</strong></span>
           <span><small>Best Flow</small><strong id="resultCombo">x1</strong></span>
         </div>
@@ -180,6 +326,29 @@
           <button id="retryBtn" class="primary">Retry</button>
           <button id="shareBtn">Share Score</button>
           <button id="menuBtn">Menu</button>
+        </div>
+      </div>
+    </section>
+
+    <section id="levelVictory" class="overlay level-victory" aria-live="assertive" aria-hidden="true">
+      <div class="panel compact victory-panel">
+        <p id="victoryEyebrow" class="eyebrow">Level 1 complete</p>
+        <h2 id="victoryTitle">Victory!</h2>
+        <p id="victoryMission" class="victory-mission">Mission complete</p>
+        <div id="victoryStars" class="victory-stars" aria-label="1 of 3 stars earned">
+          <span>★</span><span>★</span><span>★</span>
+        </div>
+        <div class="victory-target"><span>Target complete</span><strong id="victoryTarget">4 / 4 gates</strong></div>
+        <div class="result-stats victory-stats">
+          <span><small>Time</small><strong id="victoryTime">0.0s</strong></span>
+          <span><small>Score</small><strong id="victoryScore">0</strong></span>
+          <span><small>Best Flow</small><strong id="victoryCombo">x1</strong></span>
+        </div>
+        <p id="victoryUnlock" class="victory-unlock">Level 2 unlocked!</p>
+        <div class="button-row stacked">
+          <button id="nextLevelBtn" class="primary" type="button">Next Level</button>
+          <button id="replayLevelBtn" type="button">Replay Level</button>
+          <button id="victoryMapBtn" type="button">Campaign Ladder</button>
         </div>
       </div>
     </section>
@@ -197,8 +366,8 @@
     <div id="toast" role="status" aria-live="polite"></div>
   </main>
 
-  <script src="run-lifecycle.js"></script>
-  <script src="native-bridge.js"></script>
-  <script src="game.js"></script>
+  <script src="run-lifecycle.js?v=2026-08-23"></script>
+  <script src="native-bridge.js?v=2026-08-23"></script>
+  <script src="game.js?v=2026-08-23-ios-monetization"></script>
 </body>
 </html>

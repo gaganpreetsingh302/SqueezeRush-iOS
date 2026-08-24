@@ -126,6 +126,13 @@
       return { placement: "revive" };
     }
 
+    if (action === ACTIONS.INTERSTITIAL_SHOW) {
+      if (!hasOnlyKeys(payload, ["placement"]) || payload.placement !== "run_end") {
+        throw new TypeError("interstitial.show requires placement run_end.");
+      }
+      return { placement: "run_end" };
+    }
+
     if (action === ACTIONS.CONSENT_STATUS) {
       if (Object.keys(payload).length === 0) return {};
       if (!hasOnlyKeys(payload, ["operation"])

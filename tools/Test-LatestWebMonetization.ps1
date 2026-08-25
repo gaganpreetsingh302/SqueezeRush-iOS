@@ -29,6 +29,7 @@ $lifecycle = Get-Content -Raw -LiteralPath (Join-Path $webRoot 'run-lifecycle.js
 $swiftBridge = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'SqueezeRushIOS\SqueezeRushNativeBridge.swift')
 $adFlow = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'SqueezeRushIOS\SqueezeRushAdFlowState.swift')
 $project = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'SqueezeRushIOS.xcodeproj\project.pbxproj')
+$infoPlist = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'SqueezeRushIOS\Info.plist')
 
 Test-Condition ($index.Contains('id="campaignLadder"') -and $game.Contains('campaignLevelNames') -and $game.Contains('Crawler King') -and $game.Contains('campaignChallenges')) 'iOS Web bundle contains the latest 25-level campaign source'
 Test-Condition ($game.Contains('assets/crawlers/goblin-front-running.png') -and (Test-Path -LiteralPath (Join-Path $webRoot 'assets\social\squeeze-rush-share.png'))) 'Latest crawler and social assets are bundled for iOS'
@@ -61,6 +62,7 @@ Test-Condition ($project.Contains('SQUEEZE_RUSH_REMOVE_ADS_PRODUCT_ID = com.kasi
 Test-Condition ($project.Contains('ADMOB_APP_ID = "$(SQUEEZE_RUSH_ADMOB_APP_ID_RELEASE)";') -and $project.Contains('ADMOB_REWARDED_AD_UNIT_ID = "$(SQUEEZE_RUSH_ADMOB_REWARDED_AD_UNIT_ID_RELEASE)";') -and $project.Contains('ADMOB_INTERSTITIAL_AD_UNIT_ID = "$(SQUEEZE_RUSH_ADMOB_INTERSTITIAL_AD_UNIT_ID_RELEASE)";')) 'Release obtains production AdMob identifiers from Xcode Cloud environment settings'
 Test-Condition (([regex]::Matches($project, 'SQUEEZE_RUSH_ADS_RELEASE_APPROVED = YES;')).Count -eq 1) 'Release advertising has explicit production-build approval'
 Test-Condition (([regex]::Matches($project, 'CURRENT_PROJECT_VERSION = 4;')).Count -eq 2 -and ([regex]::Matches($project, 'MARKETING_VERSION = 3\.0\.0;')).Count -eq 2) 'Debug and Release identify App Store version 3.0.0 build 4'
+Test-Condition ($infoPlist.Contains('<string>$(MARKETING_VERSION)</string>') -and $infoPlist.Contains('<string>$(CURRENT_PROJECT_VERSION)</string>')) 'Info.plist obtains the app version and build number from Xcode build settings'
 Test-Condition ((Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $projectRoot 'SqueezeRushIOS.xcodeproj\xcshareddata\xcschemes\SqueezeRushIOS.xcscheme')).Hash -eq 'B2C2E619120C04C6FEB6964E4DF27677681583D36FA29DBD26A4875C82111E7A') 'Protected production scheme remains byte-identical'
 
 Write-Host ''

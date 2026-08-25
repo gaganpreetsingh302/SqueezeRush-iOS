@@ -57,7 +57,10 @@ Test-Condition ($game.Contains('finalizedRunsSinceInterstitial < 3') -and $game.
 Test-Condition ($bridge.Contains('interstitial.show requires placement run_end') -and $adFlow.Contains('case runEnd = "run_end"') -and $swiftBridge.Contains('presentInterstitial(placement:')) 'JavaScript and Swift agree on the run_end interstitial contract'
 Test-Condition ($game.Contains('PURCHASE_BUY') -and $game.Contains('PURCHASE_RESTORE') -and $game.Contains('removeAdsPrice')) 'Latest menu is wired to StoreKit purchase, restore, and localized price capabilities'
 Test-Condition ($lifecycle.Contains('lifecyclePhase !== PHASES.RESULT_PENDING') -and $lifecycle.Contains('state.rewardedReviveUsed = true')) 'Lifecycle rejects invalid rewarded-revive state transitions'
-Test-Condition ($project.Contains('SQUEEZE_RUSH_REMOVE_ADS_PRODUCT_ID = "";') -and $project.Contains('SQUEEZE_RUSH_IAP_RELEASE_APPROVED = NO;')) 'Release IAP identifiers and approval remain intentionally blocked until App Store values are supplied'
+Test-Condition ($project.Contains('SQUEEZE_RUSH_REMOVE_ADS_PRODUCT_ID = com.kasiga.squeezerush.remove_ads;') -and $project.Contains('SQUEEZE_RUSH_IAP_RELEASE_APPROVED = YES;')) 'Release uses the submitted Remove Ads product identifier and explicit IAP approval'
+Test-Condition ($project.Contains('ADMOB_APP_ID = "$(SQUEEZE_RUSH_ADMOB_APP_ID_RELEASE)";') -and $project.Contains('ADMOB_REWARDED_AD_UNIT_ID = "$(SQUEEZE_RUSH_ADMOB_REWARDED_AD_UNIT_ID_RELEASE)";') -and $project.Contains('ADMOB_INTERSTITIAL_AD_UNIT_ID = "$(SQUEEZE_RUSH_ADMOB_INTERSTITIAL_AD_UNIT_ID_RELEASE)";')) 'Release obtains production AdMob identifiers from Xcode Cloud environment settings'
+Test-Condition (([regex]::Matches($project, 'SQUEEZE_RUSH_ADS_RELEASE_APPROVED = YES;')).Count -eq 1) 'Release advertising has explicit production-build approval'
+Test-Condition (([regex]::Matches($project, 'CURRENT_PROJECT_VERSION = 4;')).Count -eq 2 -and ([regex]::Matches($project, 'MARKETING_VERSION = 3\.0\.0;')).Count -eq 2) 'Debug and Release identify App Store version 3.0.0 build 4'
 Test-Condition ((Get-FileHash -Algorithm SHA256 -LiteralPath (Join-Path $projectRoot 'SqueezeRushIOS.xcodeproj\xcshareddata\xcschemes\SqueezeRushIOS.xcscheme')).Hash -eq 'B2C2E619120C04C6FEB6964E4DF27677681583D36FA29DBD26A4875C82111E7A') 'Protected production scheme remains byte-identical'
 
 Write-Host ''

@@ -70,6 +70,20 @@
         && gameDocument.querySelector('script[src^="native-bridge.js"]')), "Lifecycle and native bridge scripts loaded");
 
       mock.reset();
+      mock.enqueue("bridge.capabilities", {
+        outcome: "failed",
+        error: { code: "bridge_starting", message: "Native bridge is still starting." }
+      });
+      enqueueCapabilities(mock);
+      await api.refreshMonetization();
+      const connectingState = api.snapshot().monetization;
+      equal(connectingState.hidden, false, "Monetization stays visible during an initial bridge failure");
+      equal(connectingState.removeAdsHidden, false, "Remove Ads stays visible during an initial bridge failure");
+      equal(connectingState.removeAdsDisabled, true, "Remove Ads is disabled while reconnecting to native StoreKit");
+      equal(connectingState.removeAdsLabel, "Remove Ads — Connecting…", "Remove Ads reports the native bridge connection state");
+      await waitFor(() => api.snapshot().monetization.removeAdsLabel === "Remove Ads $2.99", 1500, "Remove Ads did not recover after the bridge became ready");
+
+      mock.reset();
       enqueueCapabilities(mock, {
         purchases: false,
         restorePurchases: true,
@@ -86,6 +100,14 @@
       equal(loadingState.removeAdsLabel, "Remove Ads — Loading…", "Remove Ads shows an explicit loading state");
       await waitFor(() => api.snapshot().monetization.removeAdsLabel === "Remove Ads $2.99", 1500, "Remove Ads did not refresh after StoreKit became ready");
       equal(api.snapshot().monetization.removeAdsDisabled, false, "Remove Ads enables automatically when StoreKit is ready");
+
+      mock.reset();
+      enqueueCapabilities(mock, { removeAdsEntitled: true });
+      await api.refreshMonetization();
+      const entitledState = api.snapshot().monetization;
+      equal(entitledState.removeAdsHidden, false, "Existing entitlement keeps the purchase status visible");
+      equal(entitledState.removeAdsDisabled, true, "Existing entitlement disables repeat purchase");
+      equal(entitledState.removeAdsLabel, "Ads Removed ✓", "Existing entitlement is clearly labeled");
 
       mock.reset();
       enqueueCapabilities(mock);

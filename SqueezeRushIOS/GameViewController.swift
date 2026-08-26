@@ -140,7 +140,14 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKScript
         }
 
         let indexURL = webRoot.appendingPathComponent("index.html")
-        webView.loadFileURL(indexURL, allowingReadAccessTo: webRoot)
+        let appVersion = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
+        let appBuild = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "0"
+        var versionedIndexComponents = URLComponents(url: indexURL, resolvingAgainstBaseURL: false)
+        versionedIndexComponents?.queryItems = [
+            URLQueryItem(name: "appBuild", value: "\(appVersion)-\(appBuild)")
+        ]
+        let versionedIndexURL = versionedIndexComponents?.url ?? indexURL
+        webView.loadFileURL(versionedIndexURL, allowingReadAccessTo: webRoot)
     }
 
     private func presentShareSheet(text: String) {

@@ -1632,12 +1632,24 @@
     updateModeBestBadges();
     renderCareer();
     renderContracts();
+    showMonetizationPlaceholder();
     refreshMonetization();
+  }
+
+  function showMonetizationPlaceholder() {
+    if (!nativeBridgeAvailable()) return;
+    monetizationActions.classList.remove("hidden");
+    removeAdsBtn.classList.remove("hidden");
+    removeAdsBtn.disabled = true;
+    removeAdsBtn.textContent = "Remove Ads — Connecting…";
+    purchaseStatus.textContent = "Connecting to the App Store…";
   }
 
   function setMonetizationBusy(value) {
     monetizationBusy = Boolean(value);
-    removeAdsBtn.disabled = monetizationBusy || monetizationCapabilities?.purchases !== true;
+    removeAdsBtn.disabled = monetizationBusy
+      || monetizationCapabilities?.purchases !== true
+      || monetizationCapabilities?.removeAdsEntitled === true;
     restorePurchasesBtn.disabled = monetizationBusy;
     privacyOptionsBtn.disabled = monetizationBusy;
   }
@@ -1669,26 +1681,35 @@
   async function refreshMonetization() {
     const capabilities = await loadNativeCapabilities(true);
     if (!capabilities) {
-      monetizationActions.classList.add("hidden");
-      cancelMonetizationRefresh(true);
+      if (!nativeBridgeAvailable()) {
+        monetizationActions.classList.add("hidden");
+        cancelMonetizationRefresh(true);
+        return;
+      }
+      showMonetizationPlaceholder();
+      scheduleMonetizationRefresh();
       return;
     }
 
     const purchaseServiceAvailable = capabilities.restorePurchases === true
       || capabilities.entitlements === true
       || capabilities.purchases === true;
+    const iOSPurchaseSurface = capabilities.nativeBridge === true
+      && capabilities.platform === "ios";
+    const showPurchaseSurface = purchaseServiceAvailable || iOSPurchaseSurface;
     const productReady = capabilities.purchases === true;
     const removeAdsEntitled = capabilities.removeAdsEntitled === true;
-    const visible = purchaseServiceAvailable
+    const visible = showPurchaseSurface
       || capabilities.privacyOptionsRequired === true;
     monetizationActions.classList.toggle("hidden", !visible);
-    removeAdsBtn.classList.toggle("hidden", !purchaseServiceAvailable || removeAdsEntitled);
+    removeAdsBtn.classList.toggle("hidden", !showPurchaseSurface);
     restorePurchasesBtn.classList.toggle("hidden", capabilities.restorePurchases !== true);
     privacyOptionsBtn.classList.toggle("hidden", capabilities.privacyOptionsRequired !== true);
     removeAdsBtn.disabled = monetizationBusy || !productReady;
 
     if (removeAdsEntitled) {
-      removeAdsBtn.textContent = "Remove Ads";
+      removeAdsBtn.disabled = true;
+      removeAdsBtn.textContent = "Ads Removed ✓";
       purchaseStatus.textContent = "Ads removed on this Apple ID. Rewarded revives remain optional.";
       cancelMonetizationRefresh(true);
       return;

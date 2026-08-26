@@ -115,6 +115,13 @@
           </div>
         </div>
 
+        <div id="monetizationActions" class="monetization-actions hidden" aria-live="polite">
+          <button id="removeAdsBtn" type="button">Remove Ads</button>
+          <button id="restorePurchasesBtn" type="button">Restore Purchase</button>
+          <button id="privacyOptionsBtn" type="button">Privacy Choices</button>
+          <small id="purchaseStatus">Connecting to the App Store…</small>
+        </div>
+
         <details class="contract-board" aria-label="Bonus challenges">
           <summary><span>Bonus Challenges</span><small>4 missions</small></summary>
           <div id="contractList" class="contract-list"></div>
@@ -145,13 +152,6 @@
             <span class="mode-title">Chaos</span>
             <em class="mode-best" data-best-mode="chaos">Best 0</em>
           </button>
-        </div>
-
-        <div id="monetizationActions" class="monetization-actions hidden" aria-live="polite">
-          <button id="removeAdsBtn" type="button">Remove Ads</button>
-          <button id="restorePurchasesBtn" type="button">Restore Purchase</button>
-          <button id="privacyOptionsBtn" type="button">Privacy Choices</button>
-          <small id="purchaseStatus">Store unavailable.</small>
         </div>
 
         <div class="menu-actions">
@@ -366,8 +366,8 @@
     <div id="toast" role="status" aria-live="polite"></div>
   </main>
 
-  <script src="run-lifecycle.js?v=2026-08-23"></script>
-  <script src="native-bridge.js?v=2026-08-23"></script>
-  <script src="game.js?v=2026-08-23-ios-monetization"></script>
+  <script src="run-lifecycle.js?v=2026-08-25-testflight-v2"></script>
+  <script src="native-bridge.js?v=2026-08-25-testflight-v2"></script>
+  <script src="game.js?v=2026-08-25-testflight-v2"></script>
 </body>
 </html>

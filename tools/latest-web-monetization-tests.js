@@ -70,6 +70,24 @@
         && gameDocument.querySelector('script[src^="native-bridge.js"]')), "Lifecycle and native bridge scripts loaded");
 
       mock.reset();
+      enqueueCapabilities(mock, {
+        purchases: false,
+        restorePurchases: true,
+        entitlements: true,
+        removeAdsPrice: null,
+        privacyOptionsRequired: false
+      });
+      enqueueCapabilities(mock);
+      await api.refreshMonetization();
+      const loadingState = api.snapshot().monetization;
+      equal(loadingState.hidden, false, "Monetization menu stays visible while StoreKit loads");
+      equal(loadingState.removeAdsHidden, false, "Remove Ads stays visible while StoreKit loads");
+      equal(loadingState.removeAdsDisabled, true, "Remove Ads is safely disabled while StoreKit loads");
+      equal(loadingState.removeAdsLabel, "Remove Ads — Loading…", "Remove Ads shows an explicit loading state");
+      await waitFor(() => api.snapshot().monetization.removeAdsLabel === "Remove Ads $2.99", 1500, "Remove Ads did not refresh after StoreKit became ready");
+      equal(api.snapshot().monetization.removeAdsDisabled, false, "Remove Ads enables automatically when StoreKit is ready");
+
+      mock.reset();
       enqueueCapabilities(mock);
       await api.refreshMonetization();
       const menuState = api.snapshot().monetization;

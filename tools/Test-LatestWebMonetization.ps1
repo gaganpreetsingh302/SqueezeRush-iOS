@@ -28,6 +28,7 @@ $bridge = Get-Content -Raw -LiteralPath (Join-Path $webRoot 'native-bridge.js')
 $lifecycle = Get-Content -Raw -LiteralPath (Join-Path $webRoot 'run-lifecycle.js')
 $swiftBridge = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'SqueezeRushIOS\SqueezeRushNativeBridge.swift')
 $adFlow = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'SqueezeRushIOS\SqueezeRushAdFlowState.swift')
+$controller = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'SqueezeRushIOS\GameViewController.swift')
 $project = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'SqueezeRushIOS.xcodeproj\project.pbxproj')
 $infoPlist = Get-Content -Raw -LiteralPath (Join-Path $projectRoot 'SqueezeRushIOS\Info.plist')
 
@@ -57,6 +58,10 @@ Test-Condition ($game.Contains('response.data.earned === true') -and $game.Conta
 Test-Condition ($game.Contains('finalizedRunsSinceInterstitial < 3') -and $game.Contains('capabilities.removeAdsEntitled !== true') -and $game.Contains('{ placement: "run_end" }')) 'Run-end interstitial cadence is gated by readiness, consent, and Remove Ads entitlement'
 Test-Condition ($bridge.Contains('interstitial.show requires placement run_end') -and $adFlow.Contains('case runEnd = "run_end"') -and $swiftBridge.Contains('presentInterstitial(placement:')) 'JavaScript and Swift agree on the run_end interstitial contract'
 Test-Condition ($game.Contains('PURCHASE_BUY') -and $game.Contains('PURCHASE_RESTORE') -and $game.Contains('removeAdsPrice')) 'Latest menu is wired to StoreKit purchase, restore, and localized price capabilities'
+Test-Condition ($game.Contains('Remove Ads — Loading…') -and $game.Contains('scheduleMonetizationRefresh()') -and $game.Contains('removeAdsBtn.disabled = monetizationBusy || !productReady')) 'Remove Ads remains visible and refreshes safely while StoreKit loads'
+$purchaseStartPosition = $controller.IndexOf('purchaseManager.start()', [StringComparison]::Ordinal)
+$gameLoadPosition = $controller.IndexOf('loadGame(in: webView)', [StringComparison]::Ordinal)
+Test-Condition ($purchaseStartPosition -ge 0 -and $purchaseStartPosition -lt $gameLoadPosition) 'StoreKit product loading starts before the bundled game is loaded'
 Test-Condition ($lifecycle.Contains('lifecyclePhase !== PHASES.RESULT_PENDING') -and $lifecycle.Contains('state.rewardedReviveUsed = true')) 'Lifecycle rejects invalid rewarded-revive state transitions'
 Test-Condition ($project.Contains('SQUEEZE_RUSH_REMOVE_ADS_PRODUCT_ID = com.kasiga.squeezerush.remove_ads;') -and $project.Contains('SQUEEZE_RUSH_IAP_RELEASE_APPROVED = YES;')) 'Release uses the submitted Remove Ads product identifier and explicit IAP approval'
 Test-Condition ($project.Contains('ADMOB_APP_ID = "$(SQUEEZE_RUSH_ADMOB_APP_ID_RELEASE)";') -and $project.Contains('ADMOB_REWARDED_AD_UNIT_ID = "$(SQUEEZE_RUSH_ADMOB_REWARDED_AD_UNIT_ID_RELEASE)";') -and $project.Contains('ADMOB_INTERSTITIAL_AD_UNIT_ID = "$(SQUEEZE_RUSH_ADMOB_INTERSTITIAL_AD_UNIT_ID_RELEASE)";')) 'Release obtains production AdMob identifiers from Xcode Cloud environment settings'

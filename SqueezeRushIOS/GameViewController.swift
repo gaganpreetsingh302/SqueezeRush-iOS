@@ -56,6 +56,7 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKScript
         self.consentManager = consentManager
         self.purchaseManager = purchaseManager
         self.nativeBridge = nativeBridge
+        purchaseManager.start()
         contentController.addUserScript(WKUserScript(
             source: Self.platformBootstrapScript,
             injectionTime: .atDocumentStart,
@@ -99,7 +100,6 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKScript
         guard !didStartConsentFlow else { return }
         didStartConsentFlow = true
         consentManager?.requestConsentUpdateOncePerLaunch()
-        purchaseManager?.start()
     }
 
     deinit {

@@ -78,7 +78,10 @@ try {
     foreach ($result in [regex]::Matches($dom, '<li class="(pass|fail)">([^<]+)</li>')) {
         Write-Host $([System.Net.WebUtility]::HtmlDecode($result.Groups[2].Value))
     }
-    if ($summaryMatch.Value -notmatch '15/15 passed, 0 failed') { exit 1 }
+    $countMatch = [regex]::Match($summaryMatch.Value, '(?<passed>\d+)/(?<total>\d+) passed, (?<failed>\d+) failed')
+    if (-not $countMatch.Success `
+        -or $countMatch.Groups['passed'].Value -ne $countMatch.Groups['total'].Value `
+        -or $countMatch.Groups['failed'].Value -ne '0') { exit 1 }
 }
 finally {
     if ($serverPid) { Stop-Process -Id $serverPid -Force -ErrorAction SilentlyContinue }

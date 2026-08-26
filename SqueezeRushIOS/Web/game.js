@@ -372,6 +372,9 @@
   let rewardedReviveTimeoutMs = 120000;
   let monetizationBusy = false;
   let monetizationCapabilities = null;
+  let monetizationRefreshTimer = 0;
+  let monetizationRefreshAttempt = 0;
+  const monetizationRefreshDelaysMs = [400, 900, 1800, 3600, 7200];
   let finalizedRunsSinceInterstitial = 0;
   let resultTransitionBusy = false;
   const modeBests = readModeBests();
@@ -1634,31 +1637,78 @@
 
   function setMonetizationBusy(value) {
     monetizationBusy = Boolean(value);
-    removeAdsBtn.disabled = monetizationBusy;
+    removeAdsBtn.disabled = monetizationBusy || monetizationCapabilities?.purchases !== true;
     restorePurchasesBtn.disabled = monetizationBusy;
     privacyOptionsBtn.disabled = monetizationBusy;
+  }
+
+  function cancelMonetizationRefresh(resetAttempts = false) {
+    if (monetizationRefreshTimer) {
+      clearTimeout(monetizationRefreshTimer);
+      monetizationRefreshTimer = 0;
+    }
+    if (resetAttempts) {
+      monetizationRefreshAttempt = 0;
+    }
+  }
+
+  function scheduleMonetizationRefresh() {
+    if (monetizationRefreshTimer
+      || monetizationRefreshAttempt >= monetizationRefreshDelaysMs.length) {
+      return;
+    }
+
+    const delay = monetizationRefreshDelaysMs[monetizationRefreshAttempt];
+    monetizationRefreshAttempt += 1;
+    monetizationRefreshTimer = window.setTimeout(() => {
+      monetizationRefreshTimer = 0;
+      refreshMonetization();
+    }, delay);
   }
 
   async function refreshMonetization() {
     const capabilities = await loadNativeCapabilities(true);
     if (!capabilities) {
       monetizationActions.classList.add("hidden");
+      cancelMonetizationRefresh(true);
       return;
     }
 
-    const visible = capabilities.restorePurchases === true
-      || capabilities.purchases === true
+    const purchaseServiceAvailable = capabilities.restorePurchases === true
+      || capabilities.entitlements === true
+      || capabilities.purchases === true;
+    const productReady = capabilities.purchases === true;
+    const removeAdsEntitled = capabilities.removeAdsEntitled === true;
+    const visible = purchaseServiceAvailable
       || capabilities.privacyOptionsRequired === true;
     monetizationActions.classList.toggle("hidden", !visible);
-    removeAdsBtn.classList.toggle("hidden", capabilities.purchases !== true || capabilities.removeAdsEntitled === true);
+    removeAdsBtn.classList.toggle("hidden", !purchaseServiceAvailable || removeAdsEntitled);
     restorePurchasesBtn.classList.toggle("hidden", capabilities.restorePurchases !== true);
     privacyOptionsBtn.classList.toggle("hidden", capabilities.privacyOptionsRequired !== true);
-    removeAdsBtn.textContent = capabilities.removeAdsPrice
-      ? `Remove Ads ${capabilities.removeAdsPrice}`
-      : "Remove Ads";
-    purchaseStatus.textContent = capabilities.removeAdsEntitled === true
-      ? "Ads removed on this Apple ID. Rewarded revives remain optional."
-      : "Purchases are restored from your store account.";
+    removeAdsBtn.disabled = monetizationBusy || !productReady;
+
+    if (removeAdsEntitled) {
+      removeAdsBtn.textContent = "Remove Ads";
+      purchaseStatus.textContent = "Ads removed on this Apple ID. Rewarded revives remain optional.";
+      cancelMonetizationRefresh(true);
+      return;
+    }
+
+    if (productReady) {
+      removeAdsBtn.textContent = capabilities.removeAdsPrice
+        ? `Remove Ads ${capabilities.removeAdsPrice}`
+        : "Remove Ads";
+      purchaseStatus.textContent = "Purchases are restored from your store account.";
+      cancelMonetizationRefresh(true);
+      return;
+    }
+
+    const refreshExhausted = monetizationRefreshAttempt >= monetizationRefreshDelaysMs.length;
+    removeAdsBtn.textContent = refreshExhausted ? "Remove Ads — Unavailable" : "Remove Ads — Loading…";
+    purchaseStatus.textContent = refreshExhausted
+      ? "Remove Ads is not available from the App Store yet."
+      : "Connecting to the App Store…";
+    scheduleMonetizationRefresh();
   }
 
   async function purchaseRemoveAds() {
@@ -4931,10 +4981,12 @@
       monetization: {
         hidden: monetizationActions.classList.contains("hidden"),
         removeAdsHidden: removeAdsBtn.classList.contains("hidden"),
+        removeAdsDisabled: removeAdsBtn.disabled,
         removeAdsLabel: removeAdsBtn.textContent,
         restoreHidden: restorePurchasesBtn.classList.contains("hidden"),
         privacyHidden: privacyOptionsBtn.classList.contains("hidden"),
         status: purchaseStatus.textContent,
+        refreshAttempt: monetizationRefreshAttempt,
         finalizedRunsSinceInterstitial
       }
     };

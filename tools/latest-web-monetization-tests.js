@@ -102,6 +102,21 @@
       equal(api.snapshot().monetization.removeAdsDisabled, false, "Remove Ads enables automatically when StoreKit is ready");
 
       mock.reset();
+      api.exhaustMonetizationRefresh();
+      enqueueCapabilities(mock, {
+        purchases: false,
+        restorePurchases: true,
+        entitlements: true,
+        removeAdsPrice: null,
+        privacyOptionsRequired: false
+      });
+      await api.refreshMonetization();
+      const retryState = api.snapshot().monetization;
+      equal(retryState.removeAdsDisabled, false, "Remove Ads remains responsive after automatic StoreKit retries finish");
+      equal(retryState.removeAdsLabel, "Remove Ads — Retry", "Remove Ads offers an explicit retry action");
+      record(retryState.status.includes("Tap Remove Ads to try again"), "Retry state tells the player how to reconnect to the App Store");
+
+      mock.reset();
       enqueueCapabilities(mock, { removeAdsEntitled: true });
       await api.refreshMonetization();
       const entitledState = api.snapshot().monetization;

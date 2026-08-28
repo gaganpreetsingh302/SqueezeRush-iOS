@@ -1638,18 +1638,24 @@
 
   function showMonetizationPlaceholder() {
     if (!nativeBridgeAvailable()) return;
+    const refreshExhausted = monetizationRefreshAttempt >= monetizationRefreshDelaysMs.length;
     monetizationActions.classList.remove("hidden");
     removeAdsBtn.classList.remove("hidden");
-    removeAdsBtn.disabled = true;
-    removeAdsBtn.textContent = "Remove Ads — Connecting…";
-    purchaseStatus.textContent = "Connecting to the App Store…";
+    removeAdsBtn.disabled = !refreshExhausted;
+    removeAdsBtn.textContent = refreshExhausted ? "Remove Ads — Retry" : "Remove Ads — Connecting…";
+    purchaseStatus.textContent = refreshExhausted
+      ? "Could not reach the App Store. Tap Remove Ads to try again."
+      : "Connecting to the App Store…";
   }
 
   function setMonetizationBusy(value) {
     monetizationBusy = Boolean(value);
+    const productReady = monetizationCapabilities?.purchases === true;
+    const removeAdsEntitled = monetizationCapabilities?.removeAdsEntitled === true;
+    const retryAvailable = monetizationRefreshAttempt >= monetizationRefreshDelaysMs.length;
     removeAdsBtn.disabled = monetizationBusy
-      || monetizationCapabilities?.purchases !== true
-      || monetizationCapabilities?.removeAdsEntitled === true;
+      || removeAdsEntitled
+      || (!productReady && !retryAvailable);
     restorePurchasesBtn.disabled = monetizationBusy;
     privacyOptionsBtn.disabled = monetizationBusy;
   }
@@ -1725,9 +1731,10 @@
     }
 
     const refreshExhausted = monetizationRefreshAttempt >= monetizationRefreshDelaysMs.length;
-    removeAdsBtn.textContent = refreshExhausted ? "Remove Ads — Unavailable" : "Remove Ads — Loading…";
+    removeAdsBtn.disabled = monetizationBusy || !refreshExhausted;
+    removeAdsBtn.textContent = refreshExhausted ? "Remove Ads — Retry" : "Remove Ads — Loading…";
     purchaseStatus.textContent = refreshExhausted
-      ? "Remove Ads is not available from the App Store yet."
+      ? "Could not reach the App Store. Tap Remove Ads to try again."
       : "Connecting to the App Store…";
     scheduleMonetizationRefresh();
   }
@@ -5063,6 +5070,10 @@
         if (Number.isFinite(timeout) && timeout >= 10 && timeout <= 120000) {
           rewardedReviveTimeoutMs = Math.floor(timeout);
         }
+      },
+      exhaustMonetizationRefresh() {
+        cancelMonetizationRefresh();
+        monetizationRefreshAttempt = monetizationRefreshDelaysMs.length;
       },
       setRunProgress: setMonetizationTestRunProgress,
       snapshot: monetizationTestSnapshot

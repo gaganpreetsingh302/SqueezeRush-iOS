@@ -30,10 +30,25 @@ protocol SqueezeRushPurchaseServing: AnyObject {
 }
 
 final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
+    private static let startupProductRetryDelaysNanoseconds: [UInt64] = [
+        0,
+        400_000_000,
+        900_000_000,
+        1_800_000_000,
+        3_600_000_000,
+        7_200_000_000
+    ]
+    private static let purchaseProductRetryDelaysNanoseconds: [UInt64] = [
+        0,
+        750_000_000,
+        2_000_000_000
+    ]
+
     private let productID: String?
     private var removeAdsProduct: Product?
     private var removeAdsEntitled = false
     private var transactionUpdatesTask: Task<Void, Never>?
+    private var productLoadingTask: Task<Void, Never>?
     private var started = false
 
     init(bundle: Bundle = .main) {
@@ -63,19 +78,26 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
             }
         }
 
-        Task { [weak self] in
-            await self?.loadProductAndEntitlements()
+        productLoadingTask = Task { [weak self] in
+            await self?.loadProductAndEntitlementsWithRetry()
         }
     }
 
     func purchaseRemoveAds(completion: @escaping (SqueezeRushPurchaseOperationResult) -> Void) {
-        guard let product = removeAdsProduct else {
-            complete(.unavailable, code: "product_unavailable", completion: completion)
-            return
-        }
-
         Task { [weak self] in
             guard let self else { return }
+
+            var product = self.removeAdsProduct
+            if product == nil {
+                product = await self.loadProductWithRetry(
+                    delaysNanoseconds: Self.purchaseProductRetryDelaysNanoseconds
+                )
+            }
+            guard let product else {
+                self.complete(.unavailable, code: "product_unavailable", completion: completion)
+                return
+            }
+
             do {
                 let purchaseResult = try await product.purchase()
                 switch purchaseResult {
@@ -118,6 +140,9 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
         Task { [weak self] in
             guard let self else { return }
             await self.reloadEntitlements()
+            if self.removeAdsProduct == nil {
+                _ = await self.loadProductWithRetry(delaysNanoseconds: [0])
+            }
             self.complete(.success, code: nil, completion: completion)
         }
     }
@@ -125,18 +150,42 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
     func teardown() {
         transactionUpdatesTask?.cancel()
         transactionUpdatesTask = nil
+        productLoadingTask?.cancel()
+        productLoadingTask = nil
         started = false
     }
 
-    private func loadProductAndEntitlements() async {
-        if let productID {
+    private func loadProductAndEntitlementsWithRetry() async {
+        await reloadEntitlements()
+        _ = await loadProductWithRetry(delaysNanoseconds: Self.startupProductRetryDelaysNanoseconds)
+    }
+
+    private func loadProductWithRetry(delaysNanoseconds: [UInt64]) async -> Product? {
+        guard let productID else { return nil }
+        if let removeAdsProduct { return removeAdsProduct }
+
+        for delay in delaysNanoseconds {
+            guard !Task.isCancelled else { return removeAdsProduct }
+            if delay > 0 {
+                do {
+                    try await Task.sleep(nanoseconds: delay)
+                } catch {
+                    return removeAdsProduct
+                }
+            }
+
             do {
-                removeAdsProduct = try await Product.products(for: [productID]).first
+                let products = try await Product.products(for: [productID])
+                if let product = products.first(where: { $0.id == productID }) {
+                    removeAdsProduct = product
+                    return product
+                }
             } catch {
-                removeAdsProduct = nil
+                // StoreKit may briefly return an error while the storefront starts.
             }
         }
-        await reloadEntitlements()
+
+        return removeAdsProduct
     }
 
     private func reloadEntitlements() async {

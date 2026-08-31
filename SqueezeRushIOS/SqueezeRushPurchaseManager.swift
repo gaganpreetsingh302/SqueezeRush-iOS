@@ -1,6 +1,33 @@
 import Foundation
 import StoreKit
 
+private struct SqueezeRushStoreKitRequestTimeout: Error {}
+
+private final class SqueezeRushContinuationGate<Value> {
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<Value, Error>?
+
+    init(_ continuation: CheckedContinuation<Value, Error>) {
+        self.continuation = continuation
+    }
+
+    func resume(returning value: Value) {
+        takeContinuation()?.resume(returning: value)
+    }
+
+    func resume(throwing error: Error) {
+        takeContinuation()?.resume(throwing: error)
+    }
+
+    private func takeContinuation() -> CheckedContinuation<Value, Error>? {
+        lock.lock()
+        defer { lock.unlock() }
+        let current = continuation
+        continuation = nil
+        return current
+    }
+}
+
 enum SqueezeRushPurchaseOperationStatus {
     case success
     case unavailable
@@ -43,6 +70,7 @@ protocol SqueezeRushPurchaseServing: AnyObject {
 }
 
 final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
+    private static let productRequestTimeoutNanoseconds: UInt64 = 8_000_000_000
     private static let startupProductRetryDelaysNanoseconds: [UInt64] = [
         0,
         400_000_000,
@@ -51,11 +79,7 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
         3_600_000_000,
         7_200_000_000
     ]
-    private static let purchaseProductRetryDelaysNanoseconds: [UInt64] = [
-        0,
-        750_000_000,
-        2_000_000_000
-    ]
+    private static let purchaseProductRetryDelaysNanoseconds: [UInt64] = [0]
 
     private let productID: String?
     private var removeAdsProduct: Product?
@@ -65,6 +89,7 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
     private var catalogDiagnosticCode: String?
     private var transactionUpdatesTask: Task<Void, Never>?
     private var storefrontUpdatesTask: Task<Void, Never>?
+    private var storefrontLoadingTask: Task<Void, Never>?
     private var productLoadingTask: Task<Void, Never>?
     private var started = false
 
@@ -115,6 +140,7 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
         }
 
         prepareProducts()
+        refreshStorefrontDiagnostics()
     }
 
     func prepareProducts() {
@@ -131,7 +157,8 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
         guard productLoadingTask == nil else { return }
 
         catalogState = .loading
-        catalogDiagnosticCode = nil
+        catalogDiagnosticCode = "catalog_loading"
+        refreshStorefrontDiagnostics()
         productLoadingTask = Task { [weak self] in
             guard let self else { return }
             await self.loadProductAndEntitlementsWithRetry()
@@ -218,6 +245,8 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
         transactionUpdatesTask = nil
         storefrontUpdatesTask?.cancel()
         storefrontUpdatesTask = nil
+        storefrontLoadingTask?.cancel()
+        storefrontLoadingTask = nil
         productLoadingTask?.cancel()
         productLoadingTask = nil
         started = false
@@ -236,10 +265,6 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
         }
         if let removeAdsProduct { return removeAdsProduct }
 
-        if let storefront = await Storefront.current {
-            storefrontCountryCode = storefront.countryCode
-        }
-
         for delay in delaysNanoseconds {
             guard !Task.isCancelled else { return removeAdsProduct }
             if delay > 0 {
@@ -252,7 +277,8 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
 
             do {
                 catalogState = .loading
-                let products = try await Product.products(for: [productID])
+                catalogDiagnosticCode = "catalog_loading"
+                let products = try await productsWithTimeout(for: productID)
                 if let product = products.first(where: { $0.id == productID }) {
                     removeAdsProduct = product
                     catalogState = .ready
@@ -261,6 +287,9 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
                 }
                 catalogState = .empty
                 catalogDiagnosticCode = "catalog_empty"
+            } catch is SqueezeRushStoreKitRequestTimeout {
+                catalogState = .failed
+                catalogDiagnosticCode = "catalog_timeout"
             } catch {
                 catalogState = .failed
                 catalogDiagnosticCode = Self.diagnosticCode(for: error, prefix: "catalog")
@@ -268,6 +297,37 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
         }
 
         return removeAdsProduct
+    }
+
+    private func productsWithTimeout(for productID: String) async throws -> [Product] {
+        try await withCheckedThrowingContinuation { continuation in
+            let gate = SqueezeRushContinuationGate<[Product]>(continuation)
+            Task {
+                do {
+                    gate.resume(returning: try await Product.products(for: [productID]))
+                } catch {
+                    gate.resume(throwing: error)
+                }
+            }
+            Task {
+                do {
+                    try await Task.sleep(nanoseconds: Self.productRequestTimeoutNanoseconds)
+                } catch {
+                    return
+                }
+                gate.resume(throwing: SqueezeRushStoreKitRequestTimeout())
+            }
+        }
+    }
+
+    private func refreshStorefrontDiagnostics() {
+        guard storefrontLoadingTask == nil else { return }
+        storefrontLoadingTask = Task { [weak self] in
+            guard let self else { return }
+            let storefront = await Storefront.current
+            self.storefrontCountryCode = storefront?.countryCode
+            self.storefrontLoadingTask = nil
+        }
     }
 
     private func reloadEntitlements() async {

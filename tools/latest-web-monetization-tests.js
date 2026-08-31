@@ -143,6 +143,30 @@
       equal(menuState.privacyHidden, false, "Privacy Choices is visible when required");
 
       mock.reset();
+      mock.enqueue("purchase.buy", {
+        outcome: "unavailable",
+        data: {
+          removeAdsEntitled: false,
+          catalogState: "failed",
+          storefrontCountryCode: "CAN",
+          diagnosticCode: "catalog_timeout"
+        },
+        error: { code: "catalog_timeout", message: "The catalog request timed out." }
+      });
+      enqueueCapabilities(mock, {
+        purchases: false,
+        removeAdsPrice: null,
+        purchaseCatalogState: "loading",
+        purchaseStorefrontCountryCode: "CAN",
+        purchaseDiagnosticCode: "catalog_loading"
+      });
+      gameDocument.getElementById("removeAdsBtn").click();
+      await waitFor(() => api.snapshot().monetization.status.includes("CAN / catalog_timeout"), 1000, "Purchase diagnostic was overwritten");
+      record(true, "Unavailable purchase preserves the exact native storefront and timeout code");
+
+      mock.reset();
+      enqueueCapabilities(mock);
+      await api.refreshMonetization();
       mock.enqueue("purchase.buy", { outcome: "success", data: { removeAdsEntitled: true } });
       enqueueCapabilities(mock, { removeAdsEntitled: true });
       gameDocument.getElementById("removeAdsBtn").click();

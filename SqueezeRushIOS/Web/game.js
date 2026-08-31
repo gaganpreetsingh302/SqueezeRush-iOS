@@ -1648,19 +1648,22 @@
       : "Connecting to the App Store…";
   }
 
-  function purchaseCatalogFailureMessage(capabilities) {
-    const storefront = typeof capabilities?.purchaseStorefrontCountryCode === "string"
-      ? capabilities.purchaseStorefrontCountryCode.trim().slice(0, 8)
+  function purchaseCatalogFailureMessage(source, fallbackDiagnostic = "") {
+    const storefrontValue = source?.purchaseStorefrontCountryCode ?? source?.storefrontCountryCode;
+    const diagnosticValue = source?.purchaseDiagnosticCode ?? source?.diagnosticCode ?? fallbackDiagnostic;
+    const catalogState = source?.purchaseCatalogState ?? source?.catalogState;
+    const storefront = typeof storefrontValue === "string"
+      ? storefrontValue.trim().slice(0, 8)
       : "";
-    const diagnostic = typeof capabilities?.purchaseDiagnosticCode === "string"
-      ? capabilities.purchaseDiagnosticCode.trim().slice(0, 80)
+    const diagnostic = typeof diagnosticValue === "string"
+      ? diagnosticValue.trim().slice(0, 80)
       : "";
     const details = [storefront, diagnostic].filter(Boolean);
     const suffix = details.length ? ` (${details.join(" / ")})` : "";
-    if (capabilities?.purchaseCatalogState === "empty") {
+    if (catalogState === "empty") {
       return `The App Store did not return Remove Ads. Tap to retry.${suffix}`;
     }
-    if (capabilities?.purchaseCatalogState === "misconfigured") {
+    if (catalogState === "misconfigured") {
       return `Remove Ads is not configured in this build.${suffix}`;
     }
     return `Could not reach the App Store. Tap Remove Ads to try again.${suffix}`;
@@ -1761,20 +1764,30 @@
     if (monetizationBusy || !nativeBridgeAvailable()) return;
     setMonetizationBusy(true);
     purchaseStatus.textContent = "Opening the App Store...";
+    let operationFailureMessage = "";
     try {
       const response = await window.SqueezeRushNative.request(
         window.SqueezeRushNative.actions.PURCHASE_BUY,
         {},
         { timeoutMs: 120000 }
       );
-      purchaseStatus.textContent = response.status === "success" && response.data?.removeAdsEntitled === true
-        ? "Purchase complete. Ads removed."
-        : response.status === "cancelled" ? "Purchase cancelled." : "Purchase is not available yet.";
+      if (response.status === "success" && response.data?.removeAdsEntitled === true) {
+        purchaseStatus.textContent = "Purchase complete. Ads removed.";
+      } else if (response.status === "cancelled") {
+        purchaseStatus.textContent = "Purchase cancelled.";
+      } else {
+        operationFailureMessage = purchaseCatalogFailureMessage(response.data, response.error?.code);
+        purchaseStatus.textContent = operationFailureMessage;
+      }
     } catch (error) {
-      purchaseStatus.textContent = "Purchase is not available yet.";
+      operationFailureMessage = "The App Store request timed out. Tap Remove Ads to retry. (bridge_timeout)";
+      purchaseStatus.textContent = operationFailureMessage;
     } finally {
       setMonetizationBusy(false);
       await refreshMonetization();
+      if (operationFailureMessage && monetizationCapabilities?.purchases !== true) {
+        purchaseStatus.textContent = operationFailureMessage;
+      }
     }
   }
 

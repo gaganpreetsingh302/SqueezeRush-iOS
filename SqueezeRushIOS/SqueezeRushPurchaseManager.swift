@@ -8,10 +8,22 @@ enum SqueezeRushPurchaseOperationStatus {
     case failed
 }
 
+enum SqueezeRushPurchaseCatalogState: String {
+    case idle
+    case loading
+    case ready
+    case empty
+    case failed
+    case misconfigured
+}
+
 struct SqueezeRushPurchaseSnapshot {
     let productAvailable: Bool
     let removeAdsEntitled: Bool
     let localizedPrice: String?
+    let catalogState: SqueezeRushPurchaseCatalogState
+    let storefrontCountryCode: String?
+    let diagnosticCode: String?
 }
 
 struct SqueezeRushPurchaseOperationResult {
@@ -23,6 +35,7 @@ struct SqueezeRushPurchaseOperationResult {
 protocol SqueezeRushPurchaseServing: AnyObject {
     var snapshot: SqueezeRushPurchaseSnapshot { get }
     func start()
+    func prepareProducts()
     func purchaseRemoveAds(completion: @escaping (SqueezeRushPurchaseOperationResult) -> Void)
     func restorePurchases(completion: @escaping (SqueezeRushPurchaseOperationResult) -> Void)
     func refreshEntitlements(completion: @escaping (SqueezeRushPurchaseOperationResult) -> Void)
@@ -47,7 +60,11 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
     private let productID: String?
     private var removeAdsProduct: Product?
     private var removeAdsEntitled = false
+    private var catalogState: SqueezeRushPurchaseCatalogState = .idle
+    private var storefrontCountryCode: String?
+    private var catalogDiagnosticCode: String?
     private var transactionUpdatesTask: Task<Void, Never>?
+    private var storefrontUpdatesTask: Task<Void, Never>?
     private var productLoadingTask: Task<Void, Never>?
     private var started = false
 
@@ -55,13 +72,20 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
         let configured = (bundle.object(forInfoDictionaryKey: "SqueezeRushRemoveAdsProductID") as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
         productID = configured.flatMap { $0.isEmpty ? nil : $0 }
+        if productID == nil {
+            catalogState = .misconfigured
+            catalogDiagnosticCode = "missing_product_id"
+        }
     }
 
     var snapshot: SqueezeRushPurchaseSnapshot {
         SqueezeRushPurchaseSnapshot(
             productAvailable: removeAdsProduct != nil,
             removeAdsEntitled: removeAdsEntitled,
-            localizedPrice: removeAdsProduct?.displayPrice
+            localizedPrice: removeAdsProduct?.displayPrice,
+            catalogState: catalogState,
+            storefrontCountryCode: storefrontCountryCode,
+            diagnosticCode: catalogDiagnosticCode
         )
     }
 
@@ -78,8 +102,40 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
             }
         }
 
+        storefrontUpdatesTask = Task { [weak self] in
+            for await storefront in Storefront.updates {
+                guard let self else { return }
+                let storefrontChanged = self.storefrontCountryCode != storefront.countryCode
+                self.storefrontCountryCode = storefront.countryCode
+                if storefrontChanged {
+                    self.removeAdsProduct = nil
+                    self.prepareProducts()
+                }
+            }
+        }
+
+        prepareProducts()
+    }
+
+    func prepareProducts() {
+        guard productID != nil else {
+            catalogState = .misconfigured
+            catalogDiagnosticCode = "missing_product_id"
+            return
+        }
+        guard removeAdsProduct == nil else {
+            catalogState = .ready
+            catalogDiagnosticCode = nil
+            return
+        }
+        guard productLoadingTask == nil else { return }
+
+        catalogState = .loading
+        catalogDiagnosticCode = nil
         productLoadingTask = Task { [weak self] in
-            await self?.loadProductAndEntitlementsWithRetry()
+            guard let self else { return }
+            await self.loadProductAndEntitlementsWithRetry()
+            self.productLoadingTask = nil
         }
     }
 
@@ -94,7 +150,11 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
                 )
             }
             guard let product else {
-                self.complete(.unavailable, code: "product_unavailable", completion: completion)
+                self.complete(
+                    .unavailable,
+                    code: self.catalogDiagnosticCode ?? "product_unavailable",
+                    completion: completion
+                )
                 return
             }
 
@@ -118,7 +178,11 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
                     self.complete(.failed, code: "unknown_purchase_result", completion: completion)
                 }
             } catch {
-                self.complete(.failed, code: "purchase_failed", completion: completion)
+                self.complete(
+                    .failed,
+                    code: Self.diagnosticCode(for: error, prefix: "purchase"),
+                    completion: completion
+                )
             }
         }
     }
@@ -141,7 +205,9 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
             guard let self else { return }
             await self.reloadEntitlements()
             if self.removeAdsProduct == nil {
-                _ = await self.loadProductWithRetry(delaysNanoseconds: [0])
+                _ = await self.loadProductWithRetry(
+                    delaysNanoseconds: Self.purchaseProductRetryDelaysNanoseconds
+                )
             }
             self.complete(.success, code: nil, completion: completion)
         }
@@ -150,6 +216,8 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
     func teardown() {
         transactionUpdatesTask?.cancel()
         transactionUpdatesTask = nil
+        storefrontUpdatesTask?.cancel()
+        storefrontUpdatesTask = nil
         productLoadingTask?.cancel()
         productLoadingTask = nil
         started = false
@@ -161,8 +229,16 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
     }
 
     private func loadProductWithRetry(delaysNanoseconds: [UInt64]) async -> Product? {
-        guard let productID else { return nil }
+        guard let productID else {
+            catalogState = .misconfigured
+            catalogDiagnosticCode = "missing_product_id"
+            return nil
+        }
         if let removeAdsProduct { return removeAdsProduct }
+
+        if let storefront = await Storefront.current {
+            storefrontCountryCode = storefront.countryCode
+        }
 
         for delay in delaysNanoseconds {
             guard !Task.isCancelled else { return removeAdsProduct }
@@ -175,13 +251,19 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
             }
 
             do {
+                catalogState = .loading
                 let products = try await Product.products(for: [productID])
                 if let product = products.first(where: { $0.id == productID }) {
                     removeAdsProduct = product
+                    catalogState = .ready
+                    catalogDiagnosticCode = nil
                     return product
                 }
+                catalogState = .empty
+                catalogDiagnosticCode = "catalog_empty"
             } catch {
-                // StoreKit may briefly return an error while the storefront starts.
+                catalogState = .failed
+                catalogDiagnosticCode = Self.diagnosticCode(for: error, prefix: "catalog")
             }
         }
 
@@ -204,6 +286,17 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
             entitled = true
         }
         removeAdsEntitled = entitled
+    }
+
+    private static func diagnosticCode(for error: Error, prefix: String) -> String {
+        let nsError = error as NSError
+        let normalizedDomain = nsError.domain
+            .lowercased()
+            .map { character in
+                character.isLetter || character.isNumber ? character : "_"
+            }
+        let boundedDomain = String(normalizedDomain.prefix(48))
+        return "\(prefix)_\(boundedDomain)_\(nsError.code)"
     }
 
     private func complete(

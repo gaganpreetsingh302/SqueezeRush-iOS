@@ -47,6 +47,9 @@
       interstitialAdReady: true,
       removeAdsEntitled: false,
       removeAdsPrice: "$2.99",
+      purchaseCatalogState: "ready",
+      purchaseStorefrontCountryCode: "USA",
+      purchaseDiagnosticCode: null,
       privacyOptionsRequired: true
     }, overrides || {});
   }
@@ -89,6 +92,9 @@
         restorePurchases: true,
         entitlements: true,
         removeAdsPrice: null,
+        purchaseCatalogState: "empty",
+        purchaseStorefrontCountryCode: "USA",
+        purchaseDiagnosticCode: "catalog_empty",
         privacyOptionsRequired: false
       });
       enqueueCapabilities(mock);
@@ -108,13 +114,16 @@
         restorePurchases: true,
         entitlements: true,
         removeAdsPrice: null,
+        purchaseCatalogState: "empty",
+        purchaseStorefrontCountryCode: "USA",
+        purchaseDiagnosticCode: "catalog_empty",
         privacyOptionsRequired: false
       });
       await api.refreshMonetization();
       const retryState = api.snapshot().monetization;
       equal(retryState.removeAdsDisabled, false, "Remove Ads remains responsive after automatic StoreKit retries finish");
       equal(retryState.removeAdsLabel, "Remove Ads — Retry", "Remove Ads offers an explicit retry action");
-      record(retryState.status.includes("Tap Remove Ads to try again"), "Retry state tells the player how to reconnect to the App Store");
+      record(retryState.status.includes("USA / catalog_empty"), "Retry state reports the storefront and bounded catalog diagnostic");
 
       mock.reset();
       enqueueCapabilities(mock, { removeAdsEntitled: true });

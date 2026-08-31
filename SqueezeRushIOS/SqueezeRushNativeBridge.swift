@@ -295,10 +295,12 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
     private func handleAcceptedRequest(_ request: SqueezeRushBridgeRequest, payload: SqueezeRushValidatedPayload) {
         switch payload {
         case .capabilities:
+            let currentCapabilities = capabilities
+            purchaseService?.prepareProducts()
             settle(
                 request,
                 status: .success,
-                data: capabilities,
+                data: currentCapabilities,
                 error: nil
             )
         case .haptic(let style):
@@ -802,7 +804,10 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
         let purchaseSnapshot = purchaseService?.snapshot ?? SqueezeRushPurchaseSnapshot(
             productAvailable: false,
             removeAdsEntitled: false,
-            localizedPrice: nil
+            localizedPrice: nil,
+            catalogState: .idle,
+            storefrontCountryCode: nil,
+            diagnosticCode: nil
         )
         return [
             "nativeBridge": true,
@@ -827,7 +832,10 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
             "privacyOptionsRequired": consentSnapshot.privacyOptionsRequired == .required,
             "consentStatus": consentSnapshot.consentStatus.rawValue,
             "removeAdsEntitled": purchaseSnapshot.removeAdsEntitled,
-            "removeAdsPrice": purchaseSnapshot.localizedPrice.map { $0 as Any } ?? NSNull()
+            "removeAdsPrice": purchaseSnapshot.localizedPrice.map { $0 as Any } ?? NSNull(),
+            "purchaseCatalogState": purchaseSnapshot.catalogState.rawValue,
+            "purchaseStorefrontCountryCode": purchaseSnapshot.storefrontCountryCode.map { $0 as Any } ?? NSNull(),
+            "purchaseDiagnosticCode": purchaseSnapshot.diagnosticCode.map { $0 as Any } ?? NSNull()
         ]
     }
 
@@ -836,7 +844,10 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
             "product": "remove_ads",
             "productAvailable": snapshot.productAvailable,
             "removeAdsEntitled": snapshot.removeAdsEntitled,
-            "localizedPrice": snapshot.localizedPrice.map { $0 as Any } ?? NSNull()
+            "localizedPrice": snapshot.localizedPrice.map { $0 as Any } ?? NSNull(),
+            "catalogState": snapshot.catalogState.rawValue,
+            "storefrontCountryCode": snapshot.storefrontCountryCode.map { $0 as Any } ?? NSNull(),
+            "diagnosticCode": snapshot.diagnosticCode.map { $0 as Any } ?? NSNull()
         ]
     }
 

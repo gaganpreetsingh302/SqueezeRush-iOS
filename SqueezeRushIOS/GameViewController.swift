@@ -97,9 +97,33 @@ final class GameViewController: UIViewController, WKNavigationDelegate, WKScript
 
     override func viewDidAppear(_ animated: Bool) {
         super.viewDidAppear(animated)
+        purchaseManager?.prepareProducts()
         guard !didStartConsentFlow else { return }
         didStartConsentFlow = true
         consentManager?.requestConsentUpdateOncePerLaunch()
+    }
+
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(applicationDidBecomeActive),
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+    }
+
+    override func viewDidDisappear(_ animated: Bool) {
+        super.viewDidDisappear(animated)
+        NotificationCenter.default.removeObserver(
+            self,
+            name: UIApplication.didBecomeActiveNotification,
+            object: nil
+        )
+    }
+
+    @objc private func applicationDidBecomeActive() {
+        purchaseManager?.prepareProducts()
     }
 
     deinit {

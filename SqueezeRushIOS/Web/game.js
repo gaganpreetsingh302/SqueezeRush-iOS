@@ -1648,6 +1648,24 @@
       : "Connecting to the App Store…";
   }
 
+  function purchaseCatalogFailureMessage(capabilities) {
+    const storefront = typeof capabilities?.purchaseStorefrontCountryCode === "string"
+      ? capabilities.purchaseStorefrontCountryCode.trim().slice(0, 8)
+      : "";
+    const diagnostic = typeof capabilities?.purchaseDiagnosticCode === "string"
+      ? capabilities.purchaseDiagnosticCode.trim().slice(0, 80)
+      : "";
+    const details = [storefront, diagnostic].filter(Boolean);
+    const suffix = details.length ? ` (${details.join(" / ")})` : "";
+    if (capabilities?.purchaseCatalogState === "empty") {
+      return `The App Store did not return Remove Ads. Tap to retry.${suffix}`;
+    }
+    if (capabilities?.purchaseCatalogState === "misconfigured") {
+      return `Remove Ads is not configured in this build.${suffix}`;
+    }
+    return `Could not reach the App Store. Tap Remove Ads to try again.${suffix}`;
+  }
+
   function setMonetizationBusy(value) {
     monetizationBusy = Boolean(value);
     const productReady = monetizationCapabilities?.purchases === true;
@@ -1734,7 +1752,7 @@
     removeAdsBtn.disabled = monetizationBusy || !refreshExhausted;
     removeAdsBtn.textContent = refreshExhausted ? "Remove Ads — Retry" : "Remove Ads — Loading…";
     purchaseStatus.textContent = refreshExhausted
-      ? "Could not reach the App Store. Tap Remove Ads to try again."
+      ? purchaseCatalogFailureMessage(capabilities)
       : "Connecting to the App Store…";
     scheduleMonetizationRefresh();
   }

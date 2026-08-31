@@ -4,10 +4,10 @@ Upload `SqueezeRush-Latest-Remove-Ads-App-Review-1284x2778.png` in the **App Rev
 
 - Pixel size: 1284 x 2778
 - UI source: synchronized 25-stage iOS web campaign
-- Displayed test price: $2.99
+- Remove Ads button label: localized price plus explicit currency (`Remove Ads`, then `$2.99 CAD`)
 - Color: opaque 24-bit RGB PNG with no alpha channel
-- SHA-256: `B1B46FEC164942FDEE987E757F024B95C77373BCFC1096EB0DC402DC2803BC01`
+- SHA-256: `B3B5FBFCB05A50EED9876CD8C5A3AE6C4C124B1B618A09B92EC10CDB8AB6AE48`
 
 Do not upload this portrait screenshot in the separate **Image** or promotional-image field. Apple requires that optional promotional image to be a square 1024 x 1024 asset.
 
-If the App Store Connect price is not $2.99 in the storefront used for review, regenerate this screenshot with the matching localized price before uploading it.
+The app obtains both values from StoreKit: Apple's localized `displayPrice` and the associated ISO currency code. The purchase confirmation remains authoritative.

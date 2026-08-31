@@ -48,6 +48,7 @@ struct SqueezeRushPurchaseSnapshot {
     let productAvailable: Bool
     let removeAdsEntitled: Bool
     let localizedPrice: String?
+    let currencyCode: String?
     let catalogState: SqueezeRushPurchaseCatalogState
     let storefrontCountryCode: String?
     let diagnosticCode: String?
@@ -108,6 +109,7 @@ final class SqueezeRushPurchaseManager: SqueezeRushPurchaseServing {
             productAvailable: removeAdsProduct != nil,
             removeAdsEntitled: removeAdsEntitled,
             localizedPrice: removeAdsProduct?.displayPrice,
+            currencyCode: removeAdsProduct?.priceFormatStyle.currencyCode.uppercased(),
             catalogState: catalogState,
             storefrontCountryCode: storefrontCountryCode,
             diagnosticCode: catalogDiagnosticCode

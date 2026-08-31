@@ -1669,6 +1669,20 @@
     return `Could not reach the App Store. Tap Remove Ads to try again.${suffix}`;
   }
 
+  function removeAdsReadyLabel(capabilities) {
+    const price = typeof capabilities?.removeAdsPrice === "string"
+      ? capabilities.removeAdsPrice.trim().slice(0, 32)
+      : "";
+    const candidateCurrencyCode = typeof capabilities?.removeAdsCurrencyCode === "string"
+      ? capabilities.removeAdsCurrencyCode.trim().toUpperCase()
+      : "";
+    const currencyCode = /^[A-Z]{3}$/.test(candidateCurrencyCode)
+      ? candidateCurrencyCode
+      : "";
+    if (!price) return "Remove Ads";
+    return `Remove Ads\n${price}${currencyCode ? ` ${currencyCode}` : ""}`;
+  }
+
   function setMonetizationBusy(value) {
     monetizationBusy = Boolean(value);
     const productReady = monetizationCapabilities?.purchases === true;
@@ -1743,9 +1757,7 @@
     }
 
     if (productReady) {
-      removeAdsBtn.textContent = capabilities.removeAdsPrice
-        ? `Remove Ads ${capabilities.removeAdsPrice}`
-        : "Remove Ads";
+      removeAdsBtn.textContent = removeAdsReadyLabel(capabilities);
       purchaseStatus.textContent = "Purchases are restored from your store account.";
       cancelMonetizationRefresh(true);
       return;

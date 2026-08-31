@@ -1884,6 +1884,10 @@ button.rewarded-revive {
   font-size: 0.72rem;
 }
 
+#removeAdsBtn {
+  white-space: pre-line;
+}
+
 .monetization-actions small {
   grid-column: 1 / -1;
   color: var(--muted);

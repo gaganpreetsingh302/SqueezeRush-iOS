@@ -47,8 +47,9 @@
       interstitialAdReady: true,
       removeAdsEntitled: false,
       removeAdsPrice: "$2.99",
+      removeAdsCurrencyCode: "CAD",
       purchaseCatalogState: "ready",
-      purchaseStorefrontCountryCode: "USA",
+      purchaseStorefrontCountryCode: "CAN",
       purchaseDiagnosticCode: null,
       privacyOptionsRequired: true
     }, overrides || {});
@@ -84,7 +85,7 @@
       equal(connectingState.removeAdsHidden, false, "Remove Ads stays visible during an initial bridge failure");
       equal(connectingState.removeAdsDisabled, true, "Remove Ads is disabled while reconnecting to native StoreKit");
       equal(connectingState.removeAdsLabel, "Remove Ads — Connecting…", "Remove Ads reports the native bridge connection state");
-      await waitFor(() => api.snapshot().monetization.removeAdsLabel === "Remove Ads $2.99", 1500, "Remove Ads did not recover after the bridge became ready");
+      await waitFor(() => api.snapshot().monetization.removeAdsLabel === "Remove Ads\n$2.99 CAD", 1500, "Remove Ads did not recover after the bridge became ready");
 
       mock.reset();
       enqueueCapabilities(mock, {
@@ -104,7 +105,7 @@
       equal(loadingState.removeAdsHidden, false, "Remove Ads stays visible while StoreKit loads");
       equal(loadingState.removeAdsDisabled, true, "Remove Ads is safely disabled while StoreKit loads");
       equal(loadingState.removeAdsLabel, "Remove Ads — Loading…", "Remove Ads shows an explicit loading state");
-      await waitFor(() => api.snapshot().monetization.removeAdsLabel === "Remove Ads $2.99", 1500, "Remove Ads did not refresh after StoreKit became ready");
+      await waitFor(() => api.snapshot().monetization.removeAdsLabel === "Remove Ads\n$2.99 CAD", 1500, "Remove Ads did not refresh after StoreKit became ready");
       equal(api.snapshot().monetization.removeAdsDisabled, false, "Remove Ads enables automatically when StoreKit is ready");
 
       mock.reset();
@@ -138,7 +139,7 @@
       await api.refreshMonetization();
       const menuState = api.snapshot().monetization;
       equal(menuState.hidden, false, "Monetization menu is visible when native capabilities are available");
-      equal(menuState.removeAdsLabel, "Remove Ads $2.99", "Localized Remove Ads price is rendered");
+      equal(menuState.removeAdsLabel, "Remove Ads\n$2.99 CAD", "Localized Remove Ads price includes its explicit currency code");
       equal(menuState.restoreHidden, false, "Restore Purchase is visible");
       equal(menuState.privacyHidden, false, "Privacy Choices is visible when required");
 

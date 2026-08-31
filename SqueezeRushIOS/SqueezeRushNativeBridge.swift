@@ -803,6 +803,7 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
             productAvailable: false,
             removeAdsEntitled: false,
             localizedPrice: nil,
+            currencyCode: nil,
             catalogState: .idle,
             storefrontCountryCode: nil,
             diagnosticCode: nil
@@ -831,6 +832,7 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
             "consentStatus": consentSnapshot.consentStatus.rawValue,
             "removeAdsEntitled": purchaseSnapshot.removeAdsEntitled,
             "removeAdsPrice": purchaseSnapshot.localizedPrice.map { $0 as Any } ?? NSNull(),
+            "removeAdsCurrencyCode": purchaseSnapshot.currencyCode.map { $0 as Any } ?? NSNull(),
             "purchaseCatalogState": purchaseSnapshot.catalogState.rawValue,
             "purchaseStorefrontCountryCode": purchaseSnapshot.storefrontCountryCode.map { $0 as Any } ?? NSNull(),
             "purchaseDiagnosticCode": purchaseSnapshot.diagnosticCode.map { $0 as Any } ?? NSNull()
@@ -843,6 +845,7 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
             "productAvailable": snapshot.productAvailable,
             "removeAdsEntitled": snapshot.removeAdsEntitled,
             "localizedPrice": snapshot.localizedPrice.map { $0 as Any } ?? NSNull(),
+            "currencyCode": snapshot.currencyCode.map { $0 as Any } ?? NSNull(),
             "catalogState": snapshot.catalogState.rawValue,
             "storefrontCountryCode": snapshot.storefrontCountryCode.map { $0 as Any } ?? NSNull(),
             "diagnosticCode": snapshot.diagnosticCode.map { $0 as Any } ?? NSNull()

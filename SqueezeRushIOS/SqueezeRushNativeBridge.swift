@@ -1,3 +1,4 @@
+import CoreFoundation
 import Foundation
 import UIKit
 import WebKit
@@ -765,13 +766,10 @@ final class SqueezeRushNativeBridge: NSObject, WKScriptMessageHandler {
     }
 
     private static func integer(from value: Any?) -> Int? {
-        if value is Bool {
+        guard let number = value as? NSNumber else {
             return nil
         }
-        if let integer = value as? Int {
-            return integer
-        }
-        guard let number = value as? NSNumber else {
+        guard CFGetTypeID(number) != CFBooleanGetTypeID() else {
             return nil
         }
         let double = number.doubleValue

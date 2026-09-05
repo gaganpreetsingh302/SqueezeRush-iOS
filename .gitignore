@@ -15,3 +15,6 @@ ExportOptions.plist
 
 # macOS
 .DS_Store
+
+# Timestamped local browser evidence (keep prior runs on disk, not in releases).
+AppStore-Review/Build19-iPad/layout-regression-*/

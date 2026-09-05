@@ -18,7 +18,7 @@
   <meta name="twitter:image" content="https://squeeze-rush-2d.g-singh302.chatgpt.site/assets/social/squeeze-rush-share.png">
   <title>Squeeze Rush</title>
   <link rel="icon" href="app-icon-192.png" type="image/png">
-  <link rel="stylesheet" href="styles.css?v=2026-08-13-flow-guide-v27">
+  <link rel="stylesheet" href="styles.css?v=2026-09-05-build-19">
   <script>
     if (location.protocol === "http:" || location.protocol === "https:") {
       const manifest = document.createElement("link");
@@ -87,7 +87,7 @@
     </section>
 
     <section id="menu" class="overlay">
-      <div class="panel">
+      <div class="panel" data-scrollable tabindex="0" aria-label="Main menu">
         <div class="brand-row">
           <img src="icon.svg" alt="" class="app-icon">
           <div>
@@ -279,7 +279,7 @@
     </section>
 
     <section id="instructions" class="overlay instruction-overlay" aria-live="polite">
-      <div class="panel instruction-panel">
+      <div class="panel instruction-panel" data-scrollable tabindex="0" aria-label="How to play">
         <p id="instructionEyebrow" class="eyebrow">How to play</p>
         <h2 id="instructionTitle">Campaign</h2>
         <div id="instructionArt" class="instruction-art campaign" aria-label="How to play diagram">
@@ -310,7 +310,7 @@
     </section>
 
     <section id="gameOver" class="overlay">
-      <div class="panel compact">
+      <div class="panel compact" data-scrollable tabindex="0" aria-label="Run results">
         <p class="eyebrow">Run ended</p>
         <h2 id="finalScore">0</h2>
         <p id="resultLine" class="tagline">Score locked.</p>
@@ -331,7 +331,7 @@
     </section>
 
     <section id="levelVictory" class="overlay level-victory" aria-live="assertive" aria-hidden="true">
-      <div class="panel compact victory-panel">
+      <div class="panel compact victory-panel" data-scrollable tabindex="0" aria-label="Level complete">
         <p id="victoryEyebrow" class="eyebrow">Level 1 complete</p>
         <h2 id="victoryTitle">Victory!</h2>
         <p id="victoryMission" class="victory-mission">Mission complete</p>
@@ -368,6 +368,6 @@
 
   <script src="run-lifecycle.js?v=2026-08-28-review-fix"></script>
   <script src="native-bridge.js?v=2026-08-31-build-18"></script>
-  <script src="game.js?v=2026-08-31-build-18"></script>
+  <script src="game.js?v=2026-09-05-build-19"></script>
 </body>
 </html>

@@ -63,7 +63,7 @@ button.primary {
   position: fixed;
   inset: 0;
   overflow: hidden;
-  touch-action: none;
+  touch-action: pan-y;
   background:
     radial-gradient(circle at 22% 16%, rgba(76, 201, 240, 0.14), transparent 28%),
     radial-gradient(circle at 72% 90%, rgba(46, 230, 166, 0.12), transparent 30%),
@@ -628,10 +628,14 @@ body.campaign-running .level-objective-hud {
   width: min(calc(100vw - 32px), 420px);
   max-width: 100%;
   border: 1px solid var(--line);
-  max-height: calc(100vh - 34px);
+  max-height: calc(100vh - max(22px, env(safe-area-inset-top)) - max(22px, env(safe-area-inset-bottom)));
+  max-height: calc(100dvh - max(22px, env(safe-area-inset-top)) - max(22px, env(safe-area-inset-bottom)));
   overflow-y: auto;
   overscroll-behavior: contain;
-  scrollbar-width: none;
+  touch-action: pan-y;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #9aa8cf transparent;
   border-radius: 24px;
   padding: 18px;
   background: var(--shell);
@@ -639,7 +643,12 @@ body.campaign-running .level-objective-hud {
 }
 
 .panel::-webkit-scrollbar {
-  display: none;
+  width: 5px;
+}
+
+.panel::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: #9aa8cf;
 }
 
 .panel.compact {
@@ -1873,13 +1882,15 @@ button.rewarded-revive {
 }
 
 .monetization-actions {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  display: flex;
+  flex-wrap: wrap;
   gap: 8px;
   margin-top: 10px;
 }
 
 .monetization-actions button {
+  flex: 1 1 88px;
+  min-width: 0;
   padding: 10px 8px;
   font-size: 0.72rem;
 }
@@ -1889,15 +1900,9 @@ button.rewarded-revive {
 }
 
 .monetization-actions small {
-  grid-column: 1 / -1;
+  flex: 1 0 100%;
   color: var(--muted);
   text-align: center;
-}
-
-@media (max-width: 420px) {
-  .monetization-actions {
-    grid-template-columns: 1fr;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -2794,5 +2799,201 @@ button.primary {
   .mode-button.primary .mode-icon {
     width: 44px;
     height: 44px;
+  }
+}
+
+/* Keep compatibility-mode iPad windows usable without scaling down the UI.
+   Decorative content may shrink; controls and copy remain readable and scroll. */
+.panel,
+.instruction-panel {
+  width: min(420px, 100%);
+  flex: 0 1 420px;
+  min-width: 0;
+  scroll-padding-block: 18px;
+}
+
+.panel:focus-visible {
+  outline: 3px solid #35bff2;
+  outline-offset: 3px;
+}
+
+.panel button,
+.contract-board summary,
+.map-back-button {
+  min-height: 44px;
+}
+
+.monetization-actions {
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.monetization-actions button {
+  min-height: 64px;
+  padding: 10px 6px;
+  font-size: 0.8125rem;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.monetization-actions small {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.career-card {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+}
+
+.career-rank small,
+.career-progress > div:first-child {
+  font-size: 0.75rem;
+}
+
+.career-rank strong {
+  font-size: 0.875rem;
+  white-space: normal;
+}
+
+.career-progress > div:first-child {
+  flex-wrap: wrap;
+}
+
+.contract-board summary {
+  font-size: 0.8125rem;
+  text-transform: none;
+}
+
+.contract-board summary small {
+  font-size: 0.75rem;
+}
+
+.contract-card strong {
+  font-size: 0.8125rem;
+  line-height: 1.3;
+  white-space: normal;
+}
+
+.contract-card small,
+.contract-card > span,
+.contract-card em {
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.contract-card em {
+  float: none;
+}
+
+.mode-button .mode-best,
+.mode-button .campaign-route-label {
+  font-size: 0.75rem;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
+.ios-app .menu-actions {
+  grid-template-columns: 1fr;
+}
+
+.sound-toggle,
+.close-game {
+  min-height: 44px;
+}
+
+.instruction-points span,
+.victory-mission,
+.victory-target,
+.victory-target strong,
+.victory-unlock,
+.result-stats small {
+  font-size: 0.8125rem;
+  line-height: 1.4;
+}
+
+.campaign-map-panel {
+  height: min(940px, calc(100vh - max(8px, env(safe-area-inset-top)) - max(8px, env(safe-area-inset-bottom))));
+  max-height: calc(100dvh - max(8px, env(safe-area-inset-top)) - max(8px, env(safe-area-inset-bottom)));
+  min-height: 0;
+}
+
+.campaign-map-header {
+  gap: 10px;
+}
+
+.campaign-map-header > div {
+  min-width: 0;
+}
+
+.campaign-map-header h2 {
+  font-size: clamp(1.05rem, 4.6vw, 1.8rem);
+}
+
+.map-back-button {
+  padding-inline: 12px;
+  font-size: 0.875rem;
+}
+
+@media (max-width: 360px) {
+  #removeAdsBtn {
+    flex-basis: 100%;
+  }
+
+  .career-card {
+    gap: 8px;
+    padding: 9px;
+  }
+
+  .career-rank {
+    gap: 6px;
+  }
+
+  .career-rank > span {
+    flex: 0 0 32px;
+    width: 32px;
+    height: 36px;
+  }
+
+  .contract-board summary small {
+    display: none;
+  }
+
+  .contract-list {
+    grid-template-columns: 1fr;
+  }
+
+  .mode-button {
+    grid-template-columns: 28px minmax(0, 1fr);
+    gap: 2px 6px;
+  }
+
+  .mode-icon {
+    width: 28px;
+    height: 34px;
+    font-size: 1.2rem;
+  }
+
+  .mode-title {
+    font-size: 0.9375rem;
+  }
+}
+
+@media (max-height: 740px) {
+  #menu .showpiece {
+    display: none;
+  }
+
+  #menu .app-icon {
+    width: 52px;
+    height: 52px;
+    flex: 0 0 52px;
+  }
+
+  #menu h1 {
+    font-size: 2rem;
+  }
+
+  .instruction-art {
+    height: 144px;
   }
 }
